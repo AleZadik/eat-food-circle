@@ -8,6 +8,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS, cross_origin
 from dotenv import load_dotenv
 from firebase_admin import credentials, firestore, initialize_app
+from geopy.geocoders import Nominatim
 load_dotenv()
 
 # Set up Firebase creds & Firestore db
@@ -171,7 +172,7 @@ def get_all_establishments():
 
 def get_establishments_by_city(city_id):
     '''
-    Gets all establishments from the database
+    Gets all establishments with city_id from the database
 
     Args:
         city_id (int): The id of the city to get establishments from
@@ -188,6 +189,33 @@ def get_establishments_by_city(city_id):
     est_ref = db.collection('establishments')
     ests = est_ref.where('city_id', '==', city_id).stream()
     return [est.to_dict() for est in ests]
+
+# TODO: Use google maps api to get the city id from the lat and lon
+def lat_lon_to_city_name(lat, lon):
+    '''
+    Converts a latitude and longitude to a city name
+
+    Args:
+        lat (float): The latitude to be converted
+        lon (float): The longitude to be converted
+
+    Returns:
+        str: The city name
+
+    Raises:
+        ValueError: If any of the arguments are not of the correct type
+    '''
+    if not isinstance(lat, float):
+        raise ValueError("latitude must be a float.")
+    if not isinstance(lon, float):
+        raise ValueError("longitude must be a float.")
+
+    geolocator = Nominatim(user_agent="foodie")
+    location = geolocator.reverse("{}, {}".format(lat, lon))
+    try:
+        return location.raw['address']['city']
+    except KeyError:
+        return None
 
 @app.route('/')
 @cross_origin()
@@ -265,6 +293,17 @@ def get_establishments_by_city_route():
             return jsonify(ests), 200
         else:
             return jsonify({'message': 'No establishments found.'}), 404
+    except ValueError as e:
+        return jsonify({'message': str(e)}), 400
+
+@app.route('/lat-lon-to-city', methods=['POST'])
+@cross_origin()
+def lat_lon_to_city_name_route():
+    lat = float(request.form.get('lat'))
+    lon = float(request.form.get('lon'))
+    try:
+        city_name = lat_lon_to_city_name(lat, lon)
+        return jsonify({'city_name': city_name}), 200
     except ValueError as e:
         return jsonify({'message': str(e)}), 400
 
