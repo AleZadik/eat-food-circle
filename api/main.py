@@ -169,6 +169,26 @@ def get_all_establishments():
     ests = est_ref.stream()
     return [est.to_dict() for est in ests]
 
+def get_establishments_by_city(city_id):
+    '''
+    Gets all establishments from the database
+
+    Args:
+        city_id (int): The id of the city to get establishments from
+
+    Returns:
+        list: A list of all establishment objects in the given city
+
+    Raises:
+        ValueError: If any of the arguments are not of the correct type
+    '''
+    if not isinstance(city_id, int):
+        raise ValueError("city_id must be an integer.")
+
+    est_ref = db.collection('establishments')
+    ests = est_ref.where('city_id', '==', city_id).stream()
+    return [est.to_dict() for est in ests]
+
 @app.route('/')
 @cross_origin()
 def root():
@@ -234,6 +254,19 @@ def delete_establishment_route():
 @cross_origin()
 def get_all_establishments():
     return jsonify(get_all_establishments()), 200
+
+@app.route('/get-est-by-city', methods=['POST'])
+@cross_origin()
+def get_establishments_by_city_route():
+    city_id = int(request.form.get('city_id'))
+    try:
+        ests = get_establishments_by_city(city_id)
+        if ests:
+            return jsonify(ests), 200
+        else:
+            return jsonify({'message': 'No establishments found.'}), 404
+    except ValueError as e:
+        return jsonify({'message': str(e)}), 400
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8080, debug=True)
