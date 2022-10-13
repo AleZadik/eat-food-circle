@@ -108,6 +108,54 @@ def get_establishment(est_id):
     est = est_ref.get()
     return est.to_dict()
 
+def get_menu_items_from_establishment(est_id):
+    '''
+    Gets all menu items from an establishment
+
+    Args:
+        est_id (str): The id of the establishment
+
+    Returns:
+        list: A list of all menu item objects
+
+    Raises:
+        ValueError: If any of the arguments are not of the correct type
+    '''
+    if not isinstance(est_id, str):
+        raise ValueError("est_id must be a string.")
+
+    est_ref = db.collection('establishments').document(est_id)
+    est = est_ref.get()
+    if not est.exists:
+        return None
+    return est.to_dict()['menu']
+
+def update_menu_items_from_establishment(est_id, menu_obj):
+    '''
+    Updates the menu items of an establishment
+
+    Args:
+        est_id (str): The id of the establishment
+        menu_obj (dict): The new menu object
+
+    Returns:
+        dict: The dictionary of the updated establishment
+
+    Raises:
+        ValueError: If any of the arguments are not of the correct type
+    '''
+    if not isinstance(est_id, str):
+        raise ValueError("est_id must be a string.")
+    if not isinstance(menu_obj, dict):
+        raise ValueError("menu_obj must be a dictionary.")
+
+    est_ref = db.collection('establishments').document(est_id)
+    est = est_ref.get()
+    if not est.exists:
+        return None
+    est_ref.update({'menu': menu_obj})
+    return est_ref.get().to_dict()
+
 def update_establishment(est_id, changes):
     '''
     Updates an establishment in the database
@@ -266,6 +314,35 @@ def address_to_lat_lon(address):
     location = geolocator.geocode(address)
     return (location.latitude, location.longitude)
 
+def calculate_order_total(order_obj, eid):
+    '''
+    Calculates the total price of an order
+
+    Args:
+        order_obj (dict): The order object
+        eid (str): The id of the establishment the order is from
+
+    Returns:
+        float: The total price of the order
+
+    Raises:
+        ValueError: If any of the arguments are not of the correct type
+    '''
+    if not isinstance(order_obj, dict):
+        raise ValueError("order_obj must be a dictionary.")
+    if not isinstance(eid, str):
+        raise ValueError("eid must be a string.")
+
+    est = get_establishment(eid)
+    menu = est['menu']
+    total = 0
+    for pid in order_obj:
+        menu_item = menu.get(pid)
+        if not menu_item:
+            continue
+        total += menu_item['price'] * order_obj[pid] # price * quantity
+    return total
+
 def create_order(order_obj, total, est_id, uid, lat, lon, cid, ts_group):
     '''
     Creates an order in the database
@@ -316,6 +393,137 @@ def create_order(order_obj, total, est_id, uid, lat, lon, cid, ts_group):
     })
     return order_id
 
+def get_orders_by_establishment(eid):
+    '''
+    Gets all orders with est_id from the database
+
+    Args:
+        eid (str): The id of the establishment to get orders from
+
+    Returns:
+        list: A list of all order objects from the given establishment
+
+    Raises:
+        ValueError: If any of the arguments are not of the correct type
+    '''
+    if not isinstance(eid, str):
+        raise ValueError("eid must be a string.")
+
+    order_ref = db.collection('orders')
+    orders = order_ref.where('eid', '==', eid).stream()
+    return [order.to_dict() for order in orders]
+
+def create_user(uid, email, name, lat, lon, cid, u_type):
+    '''
+    Creates a user in the database
+
+    Args:
+        uid (str): The id of the user to be created
+        email (str): The email of the user to be created
+        name (str): The name of the user to be created
+        lat (float): The latitude of the user
+        lon (float): The longitude of the user
+        cid (str): The id of the city the user is in
+        u_type (str): The type of user to be created
+
+    Returns:
+        str: The id of the newly created user
+
+    Raises:
+        ValueError: If any of the arguments are not of the correct type
+    '''
+    if not isinstance(uid, str):
+        raise ValueError("uid must be a string.")
+    if not isinstance(email, str):
+        raise ValueError("email must be a string.")
+    if not isinstance(name, str):
+        raise ValueError("name must be a string.")
+    if not isinstance(lat, float):
+        raise ValueError("lat must be a float.")
+    if not isinstance(lon, float):
+        raise ValueError("lon must be a float.")
+    if not isinstance(cid, str):
+        raise ValueError("cid must be a string.")
+    if not isinstance(u_type, str):
+        raise ValueError("u_type must be a string.")
+
+    user_ref = db.collection('users')
+    user_ref.document(uid).set({
+        'uid': uid,
+        'email': email,
+        'name': name,
+        'type': u_type,
+        'lat': lat,
+        'lon': lon,
+        'cid': cid,
+        'eid': "None",
+        'created_at': time.time()
+    })
+    return uid
+
+def edit_user(uid, changes):
+    '''
+    Edits a user in the database
+
+    Args:
+        uid (str): The id of the user to be edited
+        changes (dict): The changes to be made to the user
+
+    Returns:
+        str: The id of the edited user
+
+    Raises:
+        ValueError: If any of the arguments are not of the correct type
+    '''
+    if not isinstance(uid, str):
+        raise ValueError("uid must be a string.")
+    if not isinstance(changes, dict):
+        raise ValueError("changes must be a dictionary.")
+
+    user_ref = db.collection('users')
+    user_ref.document(uid).update(changes)
+    return uid
+
+def get_user(uid):
+    '''
+    Gets a user from the database
+
+    Args:
+        uid (str): The id of the user to be retrieved
+
+    Returns:
+        dict: The user object
+
+    Raises:
+        ValueError: If any of the arguments are not of the correct type
+    '''
+    if not isinstance(uid, str):
+        raise ValueError("uid must be a string.")
+
+    user_ref = db.collection('users')
+    user = user_ref.document(uid).get()
+    return user.to_dict()
+
+def get_user_by_email(email):
+    '''
+    Gets a user from the database
+
+    Args:
+        email (str): The email of the user to be retrieved
+
+    Returns:
+        dict: The user object
+
+    Raises:
+        ValueError: If any of the arguments are not of the correct type
+    '''
+    if not isinstance(email, str):
+        raise ValueError("email must be a string.")
+
+    user_ref = db.collection('users')
+    users = user_ref.where('email', '==', email).stream()
+    return [user.to_dict() for user in users]
+
 @app.route('/')
 @cross_origin()
 def root():
@@ -335,6 +543,7 @@ def get_establishment_details():
 @app.route('/create-est', methods=['POST'])
 @cross_origin()
 def create_establishment_route():
+    uid = request.form.get('uid')
     name = request.form.get('name')
     menu_obj = {} # Start with empty menu
     city_id = int(request.form.get('city_id'))
@@ -342,7 +551,6 @@ def create_establishment_route():
     lon = float(request.form.get('lon'))
     add = request.form.get('address')
     e_pic_url = request.form.get('e_pic_url') if request.form.get('e_pic_url') else ''
-    est_id = create_establishment(name, menu_obj, city_id, lat, lon, add, e_pic_url)
     try:
         est_id = create_establishment(name, menu_obj, city_id, lat, lon, add, e_pic_url)
         return jsonify({'message': 'Establishment created successfully', 'est_id': est_id}), 200
@@ -403,6 +611,74 @@ def lat_lon_to_city_name_route():
     try:
         city_name = lat_lon_to_city_name(lat, lon)
         return jsonify({'city_name': city_name}), 200
+    except ValueError as e:
+        return jsonify({'message': str(e)}), 400
+
+@app.route('/address-to-lat-lon', methods=['POST'])
+@cross_origin()
+def address_to_lat_lon_route():
+    address = request.form.get('address')
+    try:
+        lat_lon = address_to_lat_lon(address)
+        return jsonify(lat_lon), 200
+    except ValueError as e:
+        return jsonify({'message': str(e)}), 400
+
+@app.route('/get-user', methods=['POST'])
+@cross_origin()
+def get_user_route():
+    uid = request.form.get('uid')
+    user = get_user(uid)
+    if user:
+        return jsonify(user), 200
+    else:
+        return jsonify({'message': 'User not found.'}), 404
+
+@app.route('/create-user', methods=['POST'])
+@cross_origin()
+def create_user_route():
+    name = request.form.get('name')
+    email = request.form.get('email')
+    lat = float(request.form.get('lat'))
+    lon = float(request.form.get('lon'))
+    cid = request.form.get('cid')
+    utype = request.form.get('utype')
+
+    try:
+        uid = create_user(name, lat, lon, cid)
+        return jsonify({'message': 'User created successfully', 'uid': uid}), 200
+    except ValueError as e:
+        return jsonify({'message': str(e)}), 400
+
+@app.route('/update-user', methods=['POST'])
+@cross_origin()
+def update_user_route():
+    uid = request.form.get('uid')
+    changes = json.loads(request.form.get('changes'))
+    try:
+        user_updated = edit_user(uid, changes)
+        if user_updated:
+            return jsonify(user_updated), 200
+        else:
+            return jsonify({'message': 'User not found.'}), 404
+    except KeyError as e:
+        return jsonify({'message': 'Invalid field(s) in user update.'}), 400
+    except ValueError as e:
+        return jsonify({'message': 'Invalid value(s) in user update.'}), 400
+
+@app.route('/create-order', methods=['POST'])
+@cross_origin()
+def create_order_route():
+    est_id = request.form.get('est_id')
+    u_id = request.form.get('u_id')
+    items = json.loads(request.form.get('items'))
+    address = request.form.get('address')
+    lat, lon = address_to_lat_lon(address)
+    cid = lat_lon_to_city_name(lat, lon)
+    try:
+        total = calculate_order_total(items, est_id)
+        order_id = create_order(items, total, est_id, u_id, lat, lon, cid, 'pending')
+        return jsonify({'message': 'Order created successfully', 'order_id': order_id}), 200
     except ValueError as e:
         return jsonify({'message': str(e)}), 400
 
