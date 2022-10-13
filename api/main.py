@@ -76,14 +76,14 @@ def create_establishment(name, menu_obj, city_id, lat, lon, add, e_pic_url):
     est_ref = db.collection('establishments')
     est_id = gen_random_str()
     est_ref.document(est_id).set({
+        'eid': est_id,
         'name': name,
         'menu': menu_obj,
-        'city_id': city_id,
+        'cid': city_id,
         'lat': lat,
         'lon': lon,
         'address': add,
         'e_pic_url': e_pic_url,
-        'e_id': est_id,
         'created_at': time.time()
     })
     return est_id
@@ -187,7 +187,7 @@ def get_establishments_by_city(city_id):
         raise ValueError("city_id must be an integer.")
 
     est_ref = db.collection('establishments')
-    ests = est_ref.where('city_id', '==', city_id).stream()
+    ests = est_ref.where('cid', '==', city_id).stream()
     return [est.to_dict() for est in ests]
 
 # TODO: Use google maps api to get the city id from the lat and lon
@@ -241,7 +241,7 @@ def create_city(city_name):
         return city.to_dict()['name']
 
     city_ref.document(city_name).set({
-        'name': city_name,
+        'cid': city_name,
         'created_at': time.time()
     })
     return city_name
@@ -264,8 +264,57 @@ def address_to_lat_lon(address):
 
     geolocator = Nominatim(user_agent="foodie")
     location = geolocator.geocode(address)
-    print(location.raw)
-    return location.raw
+    return (location.latitude, location.longitude)
+
+def create_order(order_obj, total, est_id, uid, lat, lon, cid, ts_group):
+    '''
+    Creates an order in the database
+
+    Args:
+        order_obj (dict): The order object to be created
+        est_id (str): The id of the establishment the order is from
+        uid (str): The id of the user who placed the order
+        lat (float): The latitude of the user
+        lon (float): The longitude of the user
+        cid (str): The id of the city the order is in
+        ts_group (str): The timestamp group the order is in
+
+    Returns:
+        str: The id of the newly created order
+
+    Raises:
+        ValueError: If any of the arguments are not of the correct type
+    '''
+    if not isinstance(order_obj, dict):
+        raise ValueError("order_obj must be a dictionary.")
+    if not isinstance(est_id, str):
+        raise ValueError("est_id must be a string.")
+    if not isinstance(uid, str):
+        raise ValueError("uid must be a string.")
+    if not isinstance(lat, float):
+        raise ValueError("lat must be a float.")
+    if not isinstance(lon, float):
+        raise ValueError("lon must be a float.")
+    if not isinstance(cid, str):
+        raise ValueError("cid must be a string.")
+    if not isinstance(ts_group, str):
+        raise ValueError("ts_group must be a string.")
+
+    order_ref = db.collection('orders')
+    order_id = order_ref.document().id
+    order_ref.document(order_id).set({
+        'oid': order_id,
+        'eid': est_id,
+        'total': total,
+        'uid': uid,
+        'lat': lat,
+        'lon': lon,
+        'cid': cid,
+        'ts_group': ts_group,
+        'order_obj': order_obj,
+        'created_at': time.time()
+    })
+    return order_id
 
 @app.route('/')
 @cross_origin()
