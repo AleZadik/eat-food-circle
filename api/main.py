@@ -217,10 +217,60 @@ def lat_lon_to_city_name(lat, lon):
     except KeyError:
         return None
 
+def create_city(city_name):
+    '''
+    Creates a city in the database
+
+    Args:
+        city_name (str): The name of the city to be created
+
+    Returns:
+        str: The name/id of the newly created city
+
+    Raises:
+        ValueError: If any of the arguments are not of the correct type
+    '''
+    if not isinstance(city_name, str):
+        raise ValueError("city_name must be a string.")
+    
+    city_name = city_name.lower()
+    city_ref = db.collection('cities')
+    city = city_ref.document(city_name).get()
+
+    if city.exists:
+        return city.to_dict()['name']
+
+    city_ref.document(city_name).set({
+        'name': city_name,
+        'created_at': time.time()
+    })
+    return city_name
+
+def address_to_lat_lon(address):
+    '''
+    Converts an address to a latitude and longitude
+
+    Args:
+        address (str): The address to be converted
+
+    Returns:
+        tuple: A tuple containing the latitude and longitude
+
+    Raises:
+        ValueError: If any of the arguments are not of the correct type
+    '''
+    if not isinstance(address, str):
+        raise ValueError("address must be a string.")
+
+    geolocator = Nominatim(user_agent="foodie")
+    location = geolocator.geocode(address)
+    print(location.raw)
+    return location.raw
+
 @app.route('/')
 @cross_origin()
 def root():
-    rand_str = gen_random_str()
+    rand_str = address_to_lat_lon("3820 Oak Ridge Circle")
     return jsonify({'message': 'Hello World!', 'random_string': rand_str}), 200
 
 @app.route('/get-est', methods=['POST'])
