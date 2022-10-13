@@ -5,3 +5,4 @@ python-dotenv==0.15.0
 Jinja2>=2.9.5
 MarkupSafe==0.23
 Werkzeug==2.0.3
+geopy==2.2.0
