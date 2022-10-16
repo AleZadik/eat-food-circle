@@ -34,7 +34,6 @@ app.use(PrimeVue, { ripple: true });
 app.use(ToastService);
 app.use(ConfirmationService);
 
-app.component('ProgressSpinner', ProgressSpinner);
 app.component('Dialog', Dialog)
 app.component('InputText', InputText)
 app.component('Button', Button)
@@ -49,5 +48,6 @@ app.component('RadioButton', RadioButton)
 app.component('ConfirmDialog', ConfirmDialog)
 app.component('Sidebar', Sidebar)
 app.component('Menubar', Menubar)
+app.component('ProgressSpinner', ProgressSpinner);
 
 app.mount('#app')

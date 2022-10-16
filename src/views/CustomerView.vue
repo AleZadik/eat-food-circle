@@ -1,135 +1,36 @@
 <template>
-    <ConfirmDialog></ConfirmDialog>
-    <Sidebar v-model:visible="visibleLeft" :dismissable="false" :modal="false" :showCloseIcon="true">
-        <div class="p-d-flex p-flex-column p-ai-center p-mt-4">
-            <h1 class="p-mb-2">Restaurants near me</h1>
-            <div class="p-d-flex p-flex-column p-ai-center p-mt-4">
-                <div class="p-d-flex p-flex-row p-ai-center p-mb-2">
-                    <Button icon="pi pi-plus" class="p-button-rounded p-button-success p-mr-2" @click="addRestaurantDialog = true"></Button>
-                    <h3>Add restaurant</h3>
-                </div>
-                <div class="p-d-flex p-flex-row p-ai-center p-mb-2">
-                    <Button icon="pi pi-plus" class="p-button-rounded p-button-success p-mr-2" @click="addRestaurantDialog = true"></Button>
-                    <h3>Add restaurant</h3>
-                </div>
-                <div class="p-d-flex p-flex-row p-ai-center p-mb-2">
-                    <Button icon="pi pi-plus" class="p-button-rounded p-button-success p-mr-2" @click="addRestaurantDialog = true"></Button>
-                    <h3>Add restaurant</h3>
-                </div>
+    <Menubar :model="items">
+        <template #start>
+            <img alt="logo" src="https://www.primefaces.org/wp-content/uploads/2020/05/placeholder.png" height="40"
+                class="mr-2">
+        </template>
+        <template #end>
+            <InputText placeholder="Search" type="text" />
+        </template>
+    </Menubar>
+    <div class="container">
+        <div class="row">
+            <div class="col-3">
+                <RestaurantSidebar />
             </div>
-        </div>
-    </Sidebar>
-
-    <Button icon="pi pi-arrow-right" @click="visibleLeft = true" />
-    <div>
-        <h5>Addons</h5>
-        <div class="grid p-fluid">
-            <div class="col-12 md:col-4">
-                <div class="p-inputgroup">
-                    <span class="p-inputgroup-addon">
-                        <i class="pi pi-user"></i>
-                    </span>
-                    <InputText placeholder="Username" />
-                </div>
-            </div>
-
-            <div class="col-12 md:col-4">
-                <div class="p-inputgroup">
-                    <span class="p-inputgroup-addon">$</span>
-                    <InputText placeholder="Price" />
-                    <span class="p-inputgroup-addon">.00</span>
-                </div>
-            </div>
-
-            <div class="col-12 md:col-4">
-                <div class="p-inputgroup">
-                    <span class="p-inputgroup-addon">W</span>
-                    <InputText placeholder="Website" />
-                </div>
-            </div>
-        </div>
-
-        <h5>Multiple Addons</h5>
-        <div class="grid">
-            <div class="col-12">
-                <div class="p-inputgroup">
-                    <span class="p-inputgroup-addon">
-                        <i class="pi pi-clock"></i>
-                    </span>
-                    <span class="p-inputgroup-addon">
-                        <i class="pi pi-star-fill"></i>
-                    </span>
-                    <InputText placeholder="Price" />
-                    <span class="p-inputgroup-addon">$</span>
-                    <span class="p-inputgroup-addon">.00</span>
-                </div>
-            </div>
-        </div>
-
-        <h5>Button Addons</h5>
-        <div class="grid p-fluid">
-            <div class="col-12 md:col-4">
-                <div class="p-inputgroup">
-                    <Button label="Search" />
-                    <InputText placeholder="Keyword" />
-                </div>
-            </div>
-
-            <div class="col-12 md:col-4">
-                <div class="p-inputgroup">
-                    <InputText placeholder="Keyword" />
-                    <Button icon="pi pi-search" class="p-button-warning" />
-                </div>
-            </div>
-
-            <div class="col-12 md:col-4">
-                <div class="p-inputgroup">
-                    <Button icon="pi pi-check" class="p-button-success" />
-                    <InputText placeholder="Vote" />
-                    <Button icon="pi pi-times" class="p-button-danger" />
-                </div>
-            </div>
-        </div>
-
-        <h5>Checkbox and RadioButton</h5>
-        <div class="grid p-fluid">
-            <div class="col-12 md:col-12">
-                <div class="p-inputgroup">
-                    <span class="p-inputgroup-addon">
-                        <Checkbox v-model="checked1" :binary="true" />
-                    </span>
-                    <InputText placeholder="Username" />
-                </div>
-            </div>
-
-            <div class="col-12 md:col-12">
-                <div class="p-inputgroup">
-                    <InputText placeholder="Price" />
-                    <span class="p-inputgroup-addon">
-                        <RadioButton name="rb1" value="rb1" v-model="radioValue1" />
-                    </span>
-                </div>
-            </div>
-
-            <div class="col-12 md:col-12">
-                <div class="p-inputgroup">
-                    <span class="p-inputgroup-addon">
-                        <Checkbox v-model="checked2" :binary="true" />
-                    </span>
-                    <InputText placeholder="Website" />
-                    <span class="p-inputgroup-addon">
-                        <RadioButton name="rb2" value="rb2" v-model="radioValue2" />
-                    </span>
-                </div>
+            <div class="col-9">
+                <div id="map"></div>
             </div>
         </div>
     </div>
 </template>
 
 <script>
+import RestaurantSidebar from '../components/RestaurantSidebar.vue'
+import { API_KEY } from "./API_KEY";
+import { Loader } from "google-maps";
+const loader = new Loader(API_KEY);
 
 export default {
     name: 'CustomerView',
+    components: {
+        RestaurantSidebar
+    },
     data() {
         return {
             user: {
@@ -144,13 +45,104 @@ export default {
         }
     },
     mounted() {
-        console.log('CustomerView mounted');
-    },
-    methods: {
-    },
-}
+        loader.load().then(function (google) {
+        var myLatlng = new google.maps.LatLng(40.748817, -73.985428);
+        var mapOptions = {
+            zoom: 13,
+            center: myLatlng,
+            zoomControl: false,
+            mapTypeControl: false,
+            scaleControl: false,
+            streetViewControl: false,
+            rotateControl: false,
+            fullscreenControl: false,
+        };
+        var map = new google.maps.Map(document.getElementById("map"), mapOptions);
 
+        var marker = new google.maps.Marker({
+            map: map,
+            position: myLatlng,
+            title: 'Click to zoom'
+        });
+        marker.addListener('click', function () {
+            map.setZoom(8);
+            map.setCenter(marker.getPosition());
+        });
+
+        var cityCircle = new google.maps.Circle({
+            strokeColor: '#FF0000',
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: '#FF0000',
+            fillOpacity: 0.35,
+            map: map,
+            center: myLatlng,
+            radius: 500
+        });
+
+        var count = 0;
+        setInterval(function () {
+            count = (count + 1) % 360;
+            cityCircle.set('fillColor', 'hsl(' + count + ', 100%, 50%)');
+        }, 100);
+        
+        marker.setMap(map);
+        });
+  },
+};
 </script>
 
 <style>
+.container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.row {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.col-3 {
+    width: 20%;
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: lightseagreen;
+}
+
+.col-9 {
+    width: 80%;
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgb(113, 150, 148);
+}
+
+.p-menubar {
+    width: 100%;
+    height: 10vh;
+    display: flex;
+}
+
+.mr-2 {
+    margin-right: 2rem;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+}
 </style>
