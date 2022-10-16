@@ -1,4 +1,17 @@
 <template>
+    <Dialog v-model:visible="display" :modal="true">
+        <template #header>
+            <h3>Welcome to Food Circle!</h3>
+        </template>
+
+        It looks like it's your first time here! Would you like to create an account as
+        a <b>customer</b> or an <b>establishment</b>?
+
+        <template #footer>
+            <Button @click="updateUser('customer')" label="Customer" icon="pi pi-user"/>
+            <Button @click="updateUser('establishment')" label="Establishment" icon="pi pi-shopping-bag" autofocus />
+        </template>
+    </Dialog>
     <div class="login-wrapper">
         <div class="login-card">
             <h1> Food Circle </h1>
@@ -6,13 +19,13 @@
                 <span class="p-inputgroup-addon">
                     <i class="pi pi-user"></i>
                 </span>
-                <InputText placeholder="Name" />
+                <InputText v-model="name" placeholder="Name" />
             </div>
             <div class="p-inputgroup">
                 <span class="p-inputgroup-addon">
                     <i class="pi pi-lock"></i>
                 </span>
-                <InputText placeholder="Email" />
+                <InputText v-model="email" placeholder="Email" />
             </div>
             <div class="p-inputgroup">
                 <span class="p-inputgroup-addon">
@@ -20,7 +33,7 @@
                 </span>
                 <Button @click="requestLocation" class="location-btn" :label="locationText" :disabled="locBtnDisabled"/>
             </div>
-            <Button @click="login" label="Login" />
+            <Button @click="login" label="Login"/>
         </div>
     </div>
 </template>
@@ -39,25 +52,52 @@ export default {
     },
     data() {
         return {
+            name: '',
+            email: '',
             locationText: 'Get Location',
             latitude: null,
             longitude: null,
-            locBtnDisabled: false
+            locBtnDisabled: false,
+            display: false,
         };
     },
     mounted(){
         this.checkLogin();
     },
+    watch: {
+        authStore: {
+            handler: function(){
+                if(this.authStore.user && this.authStore.user.u_type === "unset"){
+                    this.display = true;
+                }
+                else{
+                    this.display = false;
+                    this.$router.push({name: this.authStore.user.u_type});
+                }
+            },
+            deep: true
+        }
+    },
     methods: {
         login(){
-            this.authStore.setUserId(1);
-            console.log(this.authStore.getUserId);
+            if(!this.latitude || !this.longitude){
+                this.requestLocation();
+                this.authStore.login(this.name, this.email, this.latitude, this.longitude);
+            }
+            else{
+                this.authStore.login(this.name, this.email, this.latitude, this.longitude);
+            }
         },
         checkLogin(){
-            if(this.authStore.uid){
-                this.$router.push({name: 'playground'})
+            let user = this.authStore.user;
+            if(user && user.uid){
+                if(user.u_type === "unset"){
+                    this.display = true;
+                }
+                else{
+                    this.$router.push({name: user.u_type});
+                }
             }
-            console.log(this.authStore.uid);
         },
         requestLocation() {
             this.locationText = 'Getting Location...';
@@ -70,6 +110,10 @@ export default {
             }, (error) => {
                 this.locationText = 'Location Not Found!';
             });
+        },
+        updateUser(userType){
+            this.authStore.updateUserType(userType);
+            this.display = false;
         }
     }
 };
@@ -138,5 +182,9 @@ body {
 /* Add margin left and top on the buttons */
 .p-inputgroup .p-button {
     padding: 10px;
+}
+
+.p-dialog .p-dialog-footer{
+    text-align: left !important;
 }
 </style>

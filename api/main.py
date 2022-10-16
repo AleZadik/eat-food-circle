@@ -286,13 +286,15 @@ def create_city(city_name):
     city = city_ref.document(city_name).get()
 
     if city.exists:
-        return city.to_dict()['name']
+        return city.to_dict()
 
-    city_ref.document(city_name).set({
+    city_obj = {
         'cid': city_name,
+        'ref': gen_random_str(5),
         'created_at': time.time()
-    })
-    return city_name
+    }
+    city_ref.document(city_name).set(city_obj)
+    return city_obj
 
 def address_to_lat_lon(address):
     '''
@@ -427,7 +429,7 @@ def create_user(uid, email, name, lat, lon, cid, u_type):
         u_type (str): The type of user to be created
 
     Returns:
-        str: The id of the newly created user
+        dict: The dict of the newly created user
 
     Raises:
         ValueError: If any of the arguments are not of the correct type
@@ -447,19 +449,19 @@ def create_user(uid, email, name, lat, lon, cid, u_type):
     if not isinstance(u_type, str):
         raise ValueError("u_type must be a string.")
 
-    user_ref = db.collection('users')
-    user_ref.document(uid).set({
+    user_data = {
         'uid': uid,
         'email': email,
         'name': name,
-        'type': u_type,
         'lat': lat,
         'lon': lon,
         'cid': cid,
-        'eid': None,
+        'u_type': u_type,
         'created_at': time.time()
-    })
-    return uid
+    }
+    user_ref = db.collection('users')
+    user_ref.document(uid).set(user_data)
+    return user_data
 
 def edit_user(uid, changes):
     '''
@@ -512,7 +514,7 @@ def get_user_by_email(email):
         email (str): The email of the user to be retrieved
 
     Returns:
-        dict: The user object
+        list: the list of user objects with the given email
 
     Raises:
         ValueError: If any of the arguments are not of the correct type
@@ -634,29 +636,33 @@ def get_user_route():
     else:
         return jsonify({'message': 'User not found.'}), 404
 
-@app.route('/create-user', methods=['POST'])
+@app.route('/login', methods=['POST'])
 @cross_origin()
 def create_user_route():
     name = request.form.get('name')
     email = request.form.get('email')
     lat = float(request.form.get('lat'))
     lon = float(request.form.get('lon'))
-    cid = request.form.get('cid')
-    utype = request.form.get('utype')
 
+    # Try to get user from the database
+    user = get_user_by_email(email)
+    if len(user) > 0:
+        return jsonify(user[0]), 200
     try:
-        uid = create_user("123", email, name, lat, lon, cid, utype)
-        return jsonify({'message': 'User created successfully', 'uid': uid}), 200
+        city_name = lat_lon_to_city_name(lat, lon)
+        cid = create_city(city_name)
+        user_data = create_user(gen_random_str(), email, name, lat, lon, cid, "unset")
+        return jsonify(user_data), 200
     except ValueError as e:
         return jsonify({'message': str(e)}), 400
 
 @app.route('/update-user', methods=['POST'])
 @cross_origin()
 def update_user_route():
-    uid = request.form.get('uid')
-    changes = json.loads(request.form.get('changes'))
+    # get json data from request
+    obj = json.loads(request.data)
     try:
-        user_updated = edit_user(uid, changes)
+        user_updated = edit_user(obj["uid"], obj["changes"])
         if user_updated:
             return jsonify(user_updated), 200
         else:

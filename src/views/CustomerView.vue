@@ -129,7 +129,7 @@
 <script>
 
 export default {
-    name: 'ComponentViews',
+    name: 'CustomerView',
     data() {
         return {
             user: {
@@ -144,49 +144,8 @@ export default {
         }
     },
     mounted() {
-        this.$toast.add({ severity: 'success', summary: 'Success Message', detail: 'Order submitted', life: 3000 });
-        this.$confirm.require({
-            message: 'Are you sure you want to proceed?',
-            header: 'Confirmation',
-            icon: 'pi pi-exclamation-triangle',
-            accept: () => {
-                //callback to execute when user confirms the action
-            },
-            reject: () => {
-                //callback to execute when user rejects the action
-            },
-            onHide: () => {
-                //Callback to execute when dialog is hidden
-            }
-        });
     },
     methods: {
-        handleLogin() {
-            if (this.currentText == "Enter") {
-                this.currentText = "Login"
-                this.getLocation();
-            } else {
-                // this.$store.dispatch('auth/login', this.user)
-                // .then(() => {
-                //     this.$router.push({ name: 'home' });
-                // })
-                // .catch((error) => {
-                //     console.log(error);
-                // });
-                console.log("Logged in");
-            }
-        },
-        getUserLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(this.showPosition);
-            } else {
-                console.log("Geolocation is not supported by this browser.");
-            }
-        },
-        showPosition(position) {
-            console.log("Latitude: " + position.coords.latitude +
-                "Longitude: " + position.coords.longitude);
-        },
     },
 }
 
