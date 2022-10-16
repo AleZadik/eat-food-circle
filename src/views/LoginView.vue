@@ -33,13 +33,15 @@
                 </span>
                 <Button @click="requestLocation" class="location-btn" :label="locationText" :disabled="locBtnDisabled"/>
             </div>
-            <Button @click="login" label="Login"/>
+            <Button @click="login" :disabled="loading">
+                <ProgressSpinner v-if="loading" style="width:40px;height:40px" strokeWidth="8" fill="var(--surface-ground)" animationDuration=".5s"/>
+                <span v-else>Login</span>
+            </Button>
         </div>
     </div>
 </template>
 
 <script>
-// Use the useAuthStore store from pinia
 import { useAuthStore } from '../stores/authStore'
 
 export default {
@@ -59,6 +61,7 @@ export default {
             longitude: null,
             locBtnDisabled: false,
             display: false,
+            loading: false
         };
     },
     mounted(){
@@ -69,8 +72,10 @@ export default {
             handler: function(){
                 if(this.authStore.user && this.authStore.user.u_type === "unset"){
                     this.display = true;
+                    this.loading = false;
                 }
                 else{
+                    this.loading = false;
                     this.display = false;
                     this.$router.push({name: this.authStore.user.u_type});
                 }
@@ -80,6 +85,7 @@ export default {
     },
     methods: {
         login(){
+            this.loading = true;
             if(!this.latitude || !this.longitude){
                 this.requestLocation();
                 this.authStore.login(this.name, this.email, this.latitude, this.longitude);

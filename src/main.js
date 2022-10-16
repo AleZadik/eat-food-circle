@@ -20,6 +20,7 @@ import ConfirmationService from 'primevue/confirmationservice';
 import ConfirmDialog from 'primevue/confirmdialog';
 import Sidebar from 'primevue/sidebar';
 import Menubar from 'primevue/menubar';
+import ProgressSpinner from 'primevue/progressspinner';
 // import primevue css
 
 import 'primevue/resources/themes/vela-green/theme.css';
@@ -33,6 +34,7 @@ app.use(PrimeVue, { ripple: true });
 app.use(ToastService);
 app.use(ConfirmationService);
 
+app.component('ProgressSpinner', ProgressSpinner);
 app.component('Dialog', Dialog)
 app.component('InputText', InputText)
 app.component('Button', Button)

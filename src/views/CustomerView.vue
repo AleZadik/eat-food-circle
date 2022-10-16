@@ -144,6 +144,7 @@ export default {
         }
     },
     mounted() {
+        console.log('CustomerView mounted');
     },
     methods: {
     },
