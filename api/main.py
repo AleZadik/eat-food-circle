@@ -456,7 +456,7 @@ def create_user(uid, email, name, lat, lon, cid, u_type):
         'lat': lat,
         'lon': lon,
         'cid': cid,
-        'eid': "None",
+        'eid': None,
         'created_at': time.time()
     })
     return uid
@@ -560,7 +560,7 @@ def create_establishment_route():
 @app.route('/update-est', methods=['POST'])
 @cross_origin()
 def update_establishment_route():
-    est_id = request.form.get('est_id')
+    est_id = request.form.get('eid')
     changes = json.loads(request.form.get('changes'))
     try:
         est_updated = update_establishment(est_id, changes)
@@ -576,12 +576,12 @@ def update_establishment_route():
 @app.route('/delete-est', methods=['POST'])
 @cross_origin()
 def delete_establishment_route():
-    est_id = request.form.get('est_id')
-    u_id = request.form.get('u_id')
+    est_id = request.form.get('eid')
+    u_id = request.form.get('uid')
     try:
         # TODO: Check if user is authorized to delete establishment
         est_id = delete_establishment(est_id)
-        return jsonify({'message': 'Establishment deleted successfully', 'est_id': est_id}), 200
+        return jsonify({'message': 'Establishment deleted successfully', 'eid': est_id}), 200
     except ValueError as e:
         return jsonify({'message': str(e)}), 400
 
@@ -645,7 +645,7 @@ def create_user_route():
     utype = request.form.get('utype')
 
     try:
-        uid = create_user(name, lat, lon, cid)
+        uid = create_user("123", email, name, lat, lon, cid, utype)
         return jsonify({'message': 'User created successfully', 'uid': uid}), 200
     except ValueError as e:
         return jsonify({'message': str(e)}), 400
