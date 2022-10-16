@@ -6,41 +6,70 @@
                 <span class="p-inputgroup-addon">
                     <i class="pi pi-user"></i>
                 </span>
-                <InputText placeholder="Username" />
+                <InputText placeholder="Name" />
             </div>
             <div class="p-inputgroup">
                 <span class="p-inputgroup-addon">
                     <i class="pi pi-lock"></i>
                 </span>
-                <InputText placeholder="Password" />
+                <InputText placeholder="Email" />
             </div>
             <div class="p-inputgroup">
                 <span class="p-inputgroup-addon">
-                    <i class="pi pi-check"></i>
+                    <i class="pi pi-map-marker"></i>
                 </span>
-                <InputText placeholder="Confirm Password" />
+                <Button @click="requestLocation" class="location-btn" :label="locationText" :disabled="locBtnDisabled"/>
             </div>
-            <Button label="Login" />
+            <Button @click="login" label="Login" />
         </div>
     </div>
 </template>
 
 <script>
+// Use the useAuthStore store from pinia
+import { useAuthStore } from '../stores/authStore'
+
 export default {
     name: 'LoginView',
+    setup(){
+        const authStore = useAuthStore()
+        return {
+            authStore
+        }
+    },
     data() {
         return {
-            username: null,
-            password: null,
-            checked1: false,
-            checked2: false,
-            radioValue1: null,
-            radioValue2: null
+            locationText: 'Get Location',
+            latitude: null,
+            longitude: null,
+            locBtnDisabled: false
         };
     },
+    mounted(){
+        this.checkLogin();
+    },
     methods: {
-        login() {
-            this.$router.push({ name: 'home' });
+        login(){
+            this.authStore.setUserId(1);
+            console.log(this.authStore.getUserId);
+        },
+        checkLogin(){
+            if(this.authStore.uid){
+                this.$router.push({name: 'playground'})
+            }
+            console.log(this.authStore.uid);
+        },
+        requestLocation() {
+            this.locationText = 'Getting Location...';
+            navigator.geolocation.getCurrentPosition((position) => {
+                this.locationText = 'Location Found!';
+                this.latitude = position.coords.latitude;
+                this.longitude = position.coords.longitude;
+                this.locBtnDisabled = true;
+                this.locationText = "("+this.latitude + ', ' + this.longitude + ")";
+            }, (error) => {
+                this.locationText = 'Location Not Found!';
+            });
         }
     }
 };
@@ -49,6 +78,14 @@ export default {
 <style>
 body {
     margin: 0 auto;
+}
+
+.location-btn{
+    width: 100%;
+    background-color: #17212f !important;
+    text-align: left !important;
+    color: rgba(255, 255, 255, 0.87) !important;
+    border: 1px solid #304562 !important;
 }
 
 .login-wrapper {
