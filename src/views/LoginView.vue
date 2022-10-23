@@ -33,7 +33,7 @@
                 </span>
                 <Button @click="requestLocation" class="location-btn" :label="locationText" :disabled="locBtnDisabled"/>
             </div>
-            <Button @click="login" :disabled="loading">
+            <Button @click="login" :disabled="loading || !latitude || !longitude">
                 <ProgressSpinner v-if="loading" style="width:40px;height:40px" strokeWidth="8" fill="var(--surface-ground)" animationDuration=".5s"/>
                 <span v-else>Login</span>
             </Button>
