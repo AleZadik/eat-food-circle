@@ -3,6 +3,7 @@ import ComponentViews from '../views/ComponentViews.vue'
 import LoginView from '../views/LoginView.vue'
 import CustomerView from '../views/CustomerView.vue'
 import EstablishmentView from '../views/EstablishmentView.vue'
+import { useAuthStore } from '../stores/authStore'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -20,12 +21,33 @@ const router = createRouter({
     {
       path: '/customer',
       name: 'customer',
-      component: CustomerView
+      component: CustomerView,
+      beforeEnter: (to, from, next) => {
+        const authStore = useAuthStore()
+        if (authStore.user.u_type && authStore.user.u_type === "customer") {
+          next()
+        } else if (authStore.user.u_type && authStore.user.u_type === "establishment") {
+          next('/establishment')
+        } else {
+          next('/')
+        }
+      }
     },
     {
       path: '/establishment',
       name: 'establishment',
-      component: EstablishmentView
+      component: EstablishmentView,
+      beforeEnter: (to, from, next) => {
+        const authStore = useAuthStore()
+        if (authStore.user.u_type && authStore.user.u_type === "establishment") {
+          next()
+        } else if (authStore.user.u_type && authStore.user.u_type === "customer") {
+          next('/customer')
+        }
+        else {
+          next('/')
+        }
+      }
     },
   ]
 })
