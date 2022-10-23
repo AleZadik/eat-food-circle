@@ -11,13 +11,13 @@
                 <div class="p-d-flex p-flex-column p-ai-center p-mt-4">
                     <div class="p-d-flex p-flex-column p-ai-center p-mt-4">
                         <div class="item">
+                            <div class="option" @click="test"><span>Establishment</span></div>
+                        </div>
+                        <div class="item">
                             <div class="option"><span>Dashboard</span></div>
                         </div>
                         <div class="item">
                             <div class="option"><span>Timeline</span></div>
-                        </div>
-                        <div class="item">
-                            <div class="option" @click="test"><span>Establishment</span></div>
                         </div>
                     </div>
                 </div>
@@ -33,7 +33,95 @@
                         <InputText placeholder="Search" type="text" />
                     </template>
                 </Menubar>
-                <div id="content"></div>
+                <div id="content" style="background-color:#17212f;">
+                    <!-- Setup your Establishment || Your Establishment Details -->
+                    <div class="surface-section">
+                        <div class="font-medium text-3xl text-900 mb-3">Your Establishment</div>
+                        <div class="text-500 mb-5">Click on the text or the edit buttons to edit your establishment's
+                            information. </div>
+                        <ul class="list-none p-0 m-0">
+                            <li class="flex align-items-center py-3 px-2 border-top-1 surface-border flex-wrap">
+                                <div class="text-500 w-6 md:w-2 font-medium">Establishment Name</div>
+                                <div class="text-900 w-full md:w-8 md:flex-order-0 flex-order-1 clickable">
+                                    <span class="field-value" v-show="!showField('name')"
+                                        @click="focusField('name')">{{establishment.name}}</span>
+                                    <InputText v-model="establishment.name" v-show="showField('name')"
+                                        id="establishment-name" type="text" class="field-value form-control"
+                                        @focus="focusField('name')" @blur="blurField">
+                                    </InputText>
+                                </div>
+                                <div class="w-6 md:w-2 flex justify-content-end">
+                                    <Button label="Edit" icon="pi pi-pencil" class="p-button-text"
+                                        @click="focusField('name')"></Button>
+                                </div>
+                            </li>
+                            <li class="flex align-items-center py-3 px-2 border-top-1 surface-border flex-wrap">
+                                <div class="text-500 w-6 md:w-2 font-medium">Establishment Address</div>
+                                <div class="text-900 w-full md:w-8 md:flex-order-0 flex-order-1 clickable">
+                                    <span class="field-value" v-show="!showField('address')"
+                                        @click="focusField('address')">{{establishment.address}}</span>
+                                    <InputText v-model="establishment.address" v-show="showField('address')"
+                                        id="establishment-address" type="text" class="field-value form-control"
+                                        @focus="focusField('address')" @blur="blurField">
+                                    </InputText>
+                                </div>
+                                <div class="w-6 md:w-2 flex justify-content-end">
+                                    <Button label="Edit" icon="pi pi-pencil" class="p-button-text"
+                                        @click="focusField('address')"></Button>
+                                </div>
+                            </li>
+                            <li class="flex align-items-center py-3 px-2 border-top-1 surface-border flex-wrap">
+                                <div class="text-500 w-6 md:w-2 font-medium">Establishment Menu</div>
+                                <div class="text-900 w-full md:w-8 md:flex-order-0 flex-order-1 clickable">
+                                    <!-- check icon -->
+                                    <i class="pi pi-check"></i>
+                                    <!-- x icon -->
+                                    <i class="pi pi-times"></i>
+                                </div>
+                                <div class="w-6 md:w-2 flex justify-content-end">
+                                    <Button label="Edit" icon="pi pi-pencil" class="p-button-text"></Button>
+                                </div>
+                            </li>
+                            <li
+                                class="flex align-items-center py-3 px-2 border-top-1 border-bottom-1 surface-border flex-wrap">
+                                <div class="text-500 w-6 md:w-2 font-medium">Description</div>
+                                <div class="text-900 w-full md:w-8 md:flex-order-0 flex-order-1 line-height-3 clickable">
+                                    <span class="field-value" v-show="!showField('description')"
+                                        @click="focusField('description')">{{establishment.description}}</span>
+                                    <Textarea class="field-value form-control" rows="3" cols="50"
+                                        placeholder="Enter a description of your establishment here."
+                                        v-model="establishment.description" v-show="showField('description')"
+                                        id="establishment-description" type="text" @focus="focusField('description')"
+                                        @blur="blurField"></Textarea>
+                                </div>
+                                <div class="w-6 md:w-2 flex justify-content-end">
+                                    <Button label="Edit" icon="pi pi-pencil" class="p-button-text"
+                                        @click="focusField('description')"></Button>
+                                    
+                                </div>
+                            </li>
+                            <li class="flex align-items-center py-3 px-2 border-top-1 surface-border flex-wrap">
+                                <div class="text-500 w-6 md:w-2 font-medium">Keywords</div>
+                                <div class="text-900 w-full md:w-8 md:flex-order-0 flex-order-1">
+                                    <Chip v-for="keyword in establishment.keywords" :key="keyword" :label="keyword"
+                                        class="mr-2" v-show="!showField('keywords')"
+                                        @click="focusField('keywords')"></Chip>
+                                    <Chips v-model="establishment.keywords" v-show="showField('keywords')"
+                                        id="establishment-keywords" type="text" @focus="focusField('keywords')"
+                                        @blur="blurField" @focusout="blurField" :addOnBlur=true></Chips>
+                                </div>
+                                <div class="w-6 md:w-2 flex justify-content-end">
+                                    <Button label="Edit" icon="pi pi-pencil" class="p-button-text" @click="focusField('keywords')"></Button>
+                                </div>
+                            </li>
+                        </ul>
+                        <!-- Save Button -->
+                        <div class="block justify-content-start mt-5">
+                            <Button label="Save" icon="pi pi-check" class="p-button-success" @click="save"></Button>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
     </div>
@@ -45,6 +133,13 @@ export default {
     name: 'EstablishmentView',
     data() {
         return {
+            establishment: {
+                name: 'Establishment Name',
+                address: 'Establishment Address',
+                menu: 'Establishment Menu',
+                description: 'Establishment Description',
+                keywords: ['Establishment Keywords']
+            },
             user: {
                 name: 'John Doe',
                 email: 'test@test.com'
@@ -53,14 +148,27 @@ export default {
             checked2: false,
             radioValue1: '',
             radioValue2: '',
-            visibleLeft: true
+            visibleLeft: true,
+            editField: '',
         }
     },
     mounted() {
     },
     methods: {
-        test(){
+        test() {
             console.log("test");
+        },
+        focusField(name) {
+            this.editField = name;
+            this.$nextTick(() => {
+                document.getElementById('establishment-' + name).focus();
+            });
+        },
+        blurField() {
+            this.editField = '';
+        },
+        showField(name) {
+            return (this.establishment[name] == '' || this.editField == name)
         }
     },
 }
@@ -139,7 +247,7 @@ export default {
     width: 15vw !important;
     height: 100vh !important;
     float: left;
-    background-color: #17212F;
+    background-color: #002253;
     transition: none !important;
 }
 
@@ -149,5 +257,28 @@ export default {
     border: none !important;
     border-bottom: gray solid 1px !important;
     border-radius: 0 !important;
+}
+
+#content {
+    height: 100vh;
+    width: 100%;
+    background-color: #17212F;
+    display: flex;
+}
+
+.surface-section {
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1rem 0 rgba(0, 0, 0, 0.9);
+    margin: 50px;
+    width: inherit;
+    padding: 2rem;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+input[type=text]{
+    width: 60%;
 }
 </style>
