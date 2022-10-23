@@ -651,7 +651,7 @@ def create_user_route():
     try:
         city_name = lat_lon_to_city_name(lat, lon)
         cid = create_city(city_name)
-        user_data = create_user(gen_random_str(), email, name, lat, lon, cid, "unset")
+        user_data = create_user(gen_random_str(), email, name, lat, lon, cid['cid'], "unset")
         return jsonify(user_data), 200
     except ValueError as e:
         return jsonify({'message': str(e)}), 400
