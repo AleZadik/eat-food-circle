@@ -40,6 +40,7 @@ app.use(ConfirmationService);
 
 pinia.use(({ store }) => {
     store.$router = markRaw(router)
+    store.$toast = markRaw(app.config.globalProperties.$toast)
 });
 app.use(router);
 
