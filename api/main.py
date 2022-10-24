@@ -39,14 +39,15 @@ def gen_random_str(str_len=8):
     alphabet = string.ascii_letters + string.digits
     return ''.join(random.choice(alphabet) for i in range(str_len))
 
-def create_establishment(name, menu_obj, city_id, lat, lon, add, e_pic_url):
+# name, menu_obj, city_id, lat, lon, address, description, keywords, e_pic_url, uid
+def create_establishment(name, menu_obj, city_id, lat, lon, add, desc, keywords, e_pic_url, uid):
     '''
     Creates a new establishment in the database
 
     Args:
         name (str): The name of the establishment
         menu_obj (dict): The menu object of the establishment
-        city_id (int): The city id of the establishment
+        city_id (string): The city id of the establishment
         lat (float): The latitude of the establishment
         lon (float): The longitude of the establishment
         add (str): The address of the establishment
@@ -62,8 +63,8 @@ def create_establishment(name, menu_obj, city_id, lat, lon, add, e_pic_url):
         raise ValueError("name must be a string.")
     if not isinstance(menu_obj, dict):
         raise ValueError("menu_obj must be a dictionary.")
-    if not isinstance(city_id, int):
-        raise ValueError("city_id must be an integer.")
+    if not isinstance(city_id, str):
+        raise ValueError("city_id must be a string..")
     if not isinstance(lat, float):
         raise ValueError("latitude must be a float.")
     if not isinstance(lon, float):
@@ -77,12 +78,15 @@ def create_establishment(name, menu_obj, city_id, lat, lon, add, e_pic_url):
     est_id = gen_random_str()
     est_ref.document(est_id).set({
         'eid': est_id,
+        'uid': uid,
         'name': name,
         'menu': menu_obj,
         'cid': city_id,
         'lat': lat,
         'lon': lon,
         'address': add,
+        'description': desc,
+        'keywords': keywords,
         'e_pic_url': e_pic_url,
         'created_at': time.time()
     })
@@ -236,6 +240,26 @@ def get_establishments_by_city(city_id):
 
     est_ref = db.collection('establishments')
     ests = est_ref.where('cid', '==', city_id).stream()
+    return [est.to_dict() for est in ests]
+
+def get_establishment_by_uid(uid):
+    '''
+    Gets all establishments with uid from the database
+
+    Args:
+        uid (str): The id of the user to get establishments from
+
+    Returns:
+        list: A list of all establishment objects owned by the given user
+
+    Raises:
+        ValueError: If any of the arguments are not of the correct type
+    '''
+    if not isinstance(uid, str):
+        raise ValueError("uid must be a string.")
+
+    est_ref = db.collection('establishments')
+    ests = est_ref.where('uid', '==', uid).stream()
     return [est.to_dict() for est in ests]
 
 # TODO: Use google maps api to get the city id from the lat and lon
@@ -535,36 +559,47 @@ def root():
 @app.route('/get-est', methods=['POST'])
 @cross_origin()
 def get_establishment_details():
-    eid = request.form.get('eid')
-    est = get_establishment(eid)
-    if est:
-        return jsonify(est), 200
+    uid = request.get_json().get('uid')
+    if not uid:
+        return jsonify({'message': 'Missing uid'}), 400
+    est = get_establishment_by_uid(uid)
+    if est and est[0]:
+        return jsonify(est[0]), 200
     else:
         return jsonify({'message': 'Establishment not found.'}), 404
 
 @app.route('/create-est', methods=['POST'])
 @cross_origin()
 def create_establishment_route():
-    uid = request.form.get('uid')
-    name = request.form.get('name')
-    menu_obj = {} # Start with empty menu
-    city_id = int(request.form.get('city_id'))
-    lat = float(request.form.get('lat'))
-    lon = float(request.form.get('lon'))
-    add = request.form.get('address')
-    e_pic_url = request.form.get('e_pic_url') if request.form.get('e_pic_url') else ''
     try:
-        est_id = create_establishment(name, menu_obj, city_id, lat, lon, add, e_pic_url)
+        est = request.get_json().get('establishment')
+        uid = request.get_json().get('uid')
+        name = est.get('name')
+        menu_obj = est.get('menu')
+        description = est.get('description')
+        address = est.get('address')
+        keywords = est.get('keywords')
+        lat, lon = address_to_lat_lon(address)
+        city_id = lat_lon_to_city_name(lat, lon)
+        e_pic_url = est.get('name') if est.get('name') else ''
+        est_id = create_establishment(name, menu_obj, city_id, lat, lon, address, description, keywords, e_pic_url, uid)
         return jsonify({'message': 'Establishment created successfully', 'est_id': est_id}), 200
     except ValueError as e:
         return jsonify({'message': str(e)}), 400
+    except Exception as e:
+        return jsonify({'message': str(e)}), 500
 
 @app.route('/update-est', methods=['POST'])
 @cross_origin()
 def update_establishment_route():
-    est_id = request.form.get('eid')
-    changes = json.loads(request.form.get('changes'))
+    est_id = request.get_json().get('eid')
+    changes = request.get_json().get('changes')
     try:
+        if changes.get('address'):
+            lat, lon = address_to_lat_lon(changes.get('address'))
+            changes['lat'] = lat
+            changes['lon'] = lon
+            changes['cid'] = lat_lon_to_city_name(lat, lon)
         est_updated = update_establishment(est_id, changes)
         if est_updated:
             return jsonify(est_updated), 200

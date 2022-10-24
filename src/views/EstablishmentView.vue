@@ -85,7 +85,8 @@
                             <li
                                 class="flex align-items-center py-3 px-2 border-top-1 border-bottom-1 surface-border flex-wrap">
                                 <div class="text-500 w-6 md:w-2 font-medium">Description</div>
-                                <div class="text-900 w-full md:w-8 md:flex-order-0 flex-order-1 line-height-3 clickable">
+                                <div
+                                    class="text-900 w-full md:w-8 md:flex-order-0 flex-order-1 line-height-3 clickable">
                                     <span class="field-value" v-show="!showField('description')"
                                         @click="focusField('description')">{{establishment.description}}</span>
                                     <Textarea class="field-value form-control" rows="3" cols="50"
@@ -97,27 +98,29 @@
                                 <div class="w-6 md:w-2 flex justify-content-end">
                                     <Button label="Edit" icon="pi pi-pencil" class="p-button-text"
                                         @click="focusField('description')"></Button>
-                                    
+
                                 </div>
                             </li>
                             <li class="flex align-items-center py-3 px-2 border-top-1 surface-border flex-wrap">
                                 <div class="text-500 w-6 md:w-2 font-medium">Keywords</div>
                                 <div class="text-900 w-full md:w-8 md:flex-order-0 flex-order-1">
                                     <Chip v-for="keyword in establishment.keywords" :key="keyword" :label="keyword"
-                                        class="mr-2" v-show="!showField('keywords')"
-                                        @click="focusField('keywords')"></Chip>
+                                        class="mr-2" v-show="!showField('keywords')" @click="focusField('keywords')">
+                                    </Chip>
                                     <Chips v-model="establishment.keywords" v-show="showField('keywords')"
                                         id="establishment-keywords" type="text" @focus="focusField('keywords')"
                                         @blur="blurField" @focusout="blurField" :addOnBlur=true></Chips>
                                 </div>
                                 <div class="w-6 md:w-2 flex justify-content-end">
-                                    <Button label="Edit" icon="pi pi-pencil" class="p-button-text" @click="focusField('keywords')"></Button>
+                                    <Button label="Edit" icon="pi pi-pencil" class="p-button-text"
+                                        @click="focusField('keywords')"></Button>
                                 </div>
                             </li>
                         </ul>
                         <!-- Save Button -->
                         <div class="block justify-content-start mt-5">
-                            <Button label="Save" icon="pi pi-check" class="p-button-success" @click="save"></Button>
+                            <Button label="Save" icon="pi pi-check" class="p-button-success"
+                                @click="updateEstablishment"></Button>
                         </div>
                     </div>
 
@@ -128,35 +131,49 @@
 </template>
 
 <script>
+import { useEstablishmentStore } from '../stores/establishmentStore'
+import { useAuthStore } from '../stores/authStore'
 
 export default {
     name: 'EstablishmentView',
+    setup() {
+        const authStore = useAuthStore()
+        const establishmentStore = useEstablishmentStore()
+        return {
+            establishmentStore,
+            authStore
+        }
+    },
     data() {
         return {
             establishment: {
                 name: 'Establishment Name',
                 address: 'Establishment Address',
-                menu: 'Establishment Menu',
+                menu: {},
                 description: 'Establishment Description',
                 keywords: ['Establishment Keywords']
             },
-            user: {
-                name: 'John Doe',
-                email: 'test@test.com'
-            },
-            checked1: false,
-            checked2: false,
-            radioValue1: '',
-            radioValue2: '',
             visibleLeft: true,
             editField: '',
         }
     },
     mounted() {
+        this.getEstablishment();
     },
     methods: {
-        test() {
-            console.log("test");
+        updateEstablishment() {
+            if (this.establishment.eid) {
+                this.establishmentStore.updateEstablishment(this.authStore.user.uid, this.establishment)
+            } else {
+                this.establishmentStore.createEstablishment(this.authStore.user.uid, this.establishment)
+            }
+        },
+        getEstablishment() {
+            // See if the user has an eid field
+            if (this.authStore.user.uid) {
+                // Get the establishment
+                this.establishmentStore.getEstablishmentByUID(this.authStore.user.uid);
+            }
         },
         focusField(name) {
             this.editField = name;
@@ -171,6 +188,16 @@ export default {
             return (this.establishment[name] == '' || this.editField == name)
         }
     },
+    watch: {
+        establishmentStore: {
+            handler: function (val, oldVal) {
+                if (val.establishment) {
+                    this.establishment = val.establishment;
+                }
+            },
+            deep: true
+        }
+    }
 }
 
 </script>
@@ -278,7 +305,7 @@ export default {
     cursor: pointer;
 }
 
-input[type=text]{
+input[type=text] {
     width: 60%;
 }
 </style>
