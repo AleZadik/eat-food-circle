@@ -33,8 +33,8 @@ def gen_random_str(str_len=8):
     Raises:
         ValueError: If str_len is not an integer
     '''
-    if not isinstance(str_len, int):
-        raise ValueError("str_len must be an integer.")
+    # if not isinstance(str_len, int):
+    #     raise ValueError("str_len must be an integer.")
 
     alphabet = string.ascii_letters + string.digits
     return ''.join(random.choice(alphabet) for i in range(str_len))
@@ -59,20 +59,20 @@ def create_establishment(name, menu_obj, city_id, lat, lon, add, desc, keywords,
     Raises:
         ValueError: If any of the arguments are not of the correct type
     '''
-    if not isinstance(name, str):
-        raise ValueError("name must be a string.")
-    if not isinstance(menu_obj, dict):
-        raise ValueError("menu_obj must be a dictionary.")
-    if not isinstance(city_id, str):
-        raise ValueError("city_id must be a string..")
-    if not isinstance(lat, float):
-        raise ValueError("latitude must be a float.")
-    if not isinstance(lon, float):
-        raise ValueError("longitude must be a float.")
-    if not isinstance(add, str):
-        raise ValueError("address must be a string.")
-    if not isinstance(e_pic_url, str):
-        raise ValueError("e_pic_url must be a string.")
+    # if not isinstance(name, str):
+    #     raise ValueError("name must be a string.")
+    # if not isinstance(menu_obj, dict):
+    #     raise ValueError("menu_obj must be a dictionary.")
+    # if not isinstance(city_id, str):
+    #     raise ValueError("city_id must be a string..")
+    # if not isinstance(lat, float):
+    #     raise ValueError("latitude must be a float.")
+    # if not isinstance(lon, float):
+    #     raise ValueError("longitude must be a float.")
+    # if not isinstance(add, str):
+    #     raise ValueError("address must be a string.")
+    # if not isinstance(e_pic_url, str):
+    #     raise ValueError("e_pic_url must be a string.")
 
     est_ref = db.collection('establishments')
     est_id = gen_random_str()
@@ -81,7 +81,7 @@ def create_establishment(name, menu_obj, city_id, lat, lon, add, desc, keywords,
         'uid': uid,
         'name': name,
         'menu': menu_obj,
-        'cid': city_id,
+        'cid': city_id.lower(),
         'lat': lat,
         'lon': lon,
         'address': add,
@@ -105,8 +105,8 @@ def get_establishment(est_id):
     Raises:
         ValueError: If any of the arguments are not of the correct type
     '''
-    if not isinstance(est_id, str):
-        raise ValueError("est_id must be a string.")
+    # if not isinstance(est_id, str):
+    #     raise ValueError("est_id must be a string.")
 
     est_ref = db.collection('establishments').document(est_id)
     est = est_ref.get()
@@ -125,8 +125,8 @@ def get_menu_items_from_establishment(est_id):
     Raises:
         ValueError: If any of the arguments are not of the correct type
     '''
-    if not isinstance(est_id, str):
-        raise ValueError("est_id must be a string.")
+    # if not isinstance(est_id, str):
+    #     raise ValueError("est_id must be a string.")
 
     est_ref = db.collection('establishments').document(est_id)
     est = est_ref.get()
@@ -148,10 +148,10 @@ def update_menu_items_from_establishment(est_id, menu_obj):
     Raises:
         ValueError: If any of the arguments are not of the correct type
     '''
-    if not isinstance(est_id, str):
-        raise ValueError("est_id must be a string.")
-    if not isinstance(menu_obj, dict):
-        raise ValueError("menu_obj must be a dictionary.")
+    # if not isinstance(est_id, str):
+    #     raise ValueError("est_id must be a string.")
+    # if not isinstance(menu_obj, dict):
+    #     raise ValueError("menu_obj must be a dictionary.")
 
     est_ref = db.collection('establishments').document(est_id)
     est = est_ref.get()
@@ -175,10 +175,10 @@ def update_establishment(est_id, changes):
         ValueError: If any of the arguments are not of the correct type
         KeyError: If any of the keys in changes are not valid
     '''
-    if not isinstance(est_id, str):
-        raise ValueError("est_id must be a string.")
-    if not isinstance(changes, dict):
-        raise ValueError("changes must be a dictionary.")
+    # if not isinstance(est_id, str):
+    #     raise ValueError("est_id must be a string.")
+    # if not isinstance(changes, dict):
+    #     raise ValueError("changes must be a dictionary.")
     if not any(field in changes for field in ['name', 'menu', 'city_id', 'lat', 'lon', 'address', 'e_pic_url']):
         raise KeyError("changes must contain at least one of the following fields: name, menu, city_id, lat, lon, address, e_pic_url")
     est_ref = db.collection('establishments').document(est_id)
@@ -201,8 +201,8 @@ def delete_establishment(est_id):
     Raises:
         ValueError: If any of the arguments are not of the correct type
     '''
-    if not isinstance(est_id, str):
-        raise ValueError("est_id must be a string.")
+    # if not isinstance(est_id, str):
+    #     raise ValueError("est_id must be a string.")
 
     est_ref = db.collection('establishments').document(est_id)
     est_ref.delete()
@@ -235,11 +235,11 @@ def get_establishments_by_city(city_id):
     Raises:
         ValueError: If any of the arguments are not of the correct type
     '''
-    if not isinstance(city_id, int):
-        raise ValueError("city_id must be an integer.")
+    # if not isinstance(city_id, int):
+    #     raise ValueError("city_id must be an integer.")
 
     est_ref = db.collection('establishments')
-    ests = est_ref.where('cid', '==', city_id).stream()
+    ests = est_ref.where('cid', '==', city_id.lower()).stream()
     return [est.to_dict() for est in ests]
 
 def get_establishment_by_uid(uid):
@@ -255,8 +255,8 @@ def get_establishment_by_uid(uid):
     Raises:
         ValueError: If any of the arguments are not of the correct type
     '''
-    if not isinstance(uid, str):
-        raise ValueError("uid must be a string.")
+    # if not isinstance(uid, str):
+    #     raise ValueError("uid must be a string.")
 
     est_ref = db.collection('establishments')
     ests = est_ref.where('uid', '==', uid).stream()
@@ -277,10 +277,10 @@ def lat_lon_to_city_name(lat, lon):
     Raises:
         ValueError: If any of the arguments are not of the correct type
     '''
-    if not isinstance(lat, float):
-        raise ValueError("latitude must be a float.")
-    if not isinstance(lon, float):
-        raise ValueError("longitude must be a float.")
+    # if not isinstance(lat, float):
+    #     raise ValueError("latitude must be a float.")
+    # if not isinstance(lon, float):
+    #     raise ValueError("longitude must be a float.")
 
     geolocator = Nominatim(user_agent="foodie")
     location = geolocator.reverse("{}, {}".format(lat, lon))
@@ -302,8 +302,8 @@ def create_city(city_name):
     Raises:
         ValueError: If any of the arguments are not of the correct type
     '''
-    if not isinstance(city_name, str):
-        raise ValueError("city_name must be a string.")
+    # if not isinstance(city_name, str):
+    #     raise ValueError("city_name must be a string.")
     
     city_name = city_name.lower()
     city_ref = db.collection('cities')
@@ -333,8 +333,8 @@ def address_to_lat_lon(address):
     Raises:
         ValueError: If any of the arguments are not of the correct type
     '''
-    if not isinstance(address, str):
-        raise ValueError("address must be a string.")
+    # if not isinstance(address, str):
+    #     raise ValueError("address must be a string.")
 
     geolocator = Nominatim(user_agent="foodie")
     location = geolocator.geocode(address)
@@ -354,10 +354,10 @@ def calculate_order_total(order_obj, eid):
     Raises:
         ValueError: If any of the arguments are not of the correct type
     '''
-    if not isinstance(order_obj, dict):
-        raise ValueError("order_obj must be a dictionary.")
-    if not isinstance(eid, str):
-        raise ValueError("eid must be a string.")
+    # if not isinstance(order_obj, dict):
+    #     raise ValueError("order_obj must be a dictionary.")
+    # if not isinstance(eid, str):
+    #     raise ValueError("eid must be a string.")
 
     est = get_establishment(eid)
     menu = est['menu']
@@ -388,20 +388,20 @@ def create_order(order_obj, total, est_id, uid, lat, lon, cid, ts_group):
     Raises:
         ValueError: If any of the arguments are not of the correct type
     '''
-    if not isinstance(order_obj, dict):
-        raise ValueError("order_obj must be a dictionary.")
-    if not isinstance(est_id, str):
-        raise ValueError("est_id must be a string.")
-    if not isinstance(uid, str):
-        raise ValueError("uid must be a string.")
-    if not isinstance(lat, float):
-        raise ValueError("lat must be a float.")
-    if not isinstance(lon, float):
-        raise ValueError("lon must be a float.")
-    if not isinstance(cid, str):
-        raise ValueError("cid must be a string.")
-    if not isinstance(ts_group, str):
-        raise ValueError("ts_group must be a string.")
+    # if not isinstance(order_obj, dict):
+    #     raise ValueError("order_obj must be a dictionary.")
+    # if not isinstance(est_id, str):
+    #     raise ValueError("est_id must be a string.")
+    # if not isinstance(uid, str):
+    #     raise ValueError("uid must be a string.")
+    # if not isinstance(lat, float):
+    #     raise ValueError("lat must be a float.")
+    # if not isinstance(lon, float):
+    #     raise ValueError("lon must be a float.")
+    # if not isinstance(cid, str):
+    #     raise ValueError("cid must be a string.")
+    # if not isinstance(ts_group, str):
+    #     raise ValueError("ts_group must be a string.")
 
     order_ref = db.collection('orders')
     order_id = order_ref.document().id
@@ -432,8 +432,8 @@ def get_orders_by_establishment(eid):
     Raises:
         ValueError: If any of the arguments are not of the correct type
     '''
-    if not isinstance(eid, str):
-        raise ValueError("eid must be a string.")
+    # if not isinstance(eid, str):
+    #     raise ValueError("eid must be a string.")
 
     order_ref = db.collection('orders')
     orders = order_ref.where('eid', '==', eid).stream()
@@ -501,10 +501,10 @@ def edit_user(uid, changes):
     Raises:
         ValueError: If any of the arguments are not of the correct type
     '''
-    if not isinstance(uid, str):
-        raise ValueError("uid must be a string.")
-    if not isinstance(changes, dict):
-        raise ValueError("changes must be a dictionary.")
+    # if not isinstance(uid, str):
+    #     raise ValueError("uid must be a string.")
+    # if not isinstance(changes, dict):
+    #     raise ValueError("changes must be a dictionary.")
 
     user_ref = db.collection('users')
     user_ref.document(uid).update(changes)
@@ -523,8 +523,8 @@ def get_user(uid):
     Raises:
         ValueError: If any of the arguments are not of the correct type
     '''
-    if not isinstance(uid, str):
-        raise ValueError("uid must be a string.")
+    # if not isinstance(uid, str):
+    #     raise ValueError("uid must be a string.")
 
     user_ref = db.collection('users')
     user = user_ref.document(uid).get()
@@ -543,8 +543,8 @@ def get_user_by_email(email):
     Raises:
         ValueError: If any of the arguments are not of the correct type
     '''
-    if not isinstance(email, str):
-        raise ValueError("email must be a string.")
+    # if not isinstance(email, str):
+    #     raise ValueError("email must be a string.")
 
     user_ref = db.collection('users')
     users = user_ref.where('email', '==', email).stream()
@@ -581,7 +581,7 @@ def create_establishment_route():
         keywords = est.get('keywords')
         lat, lon = address_to_lat_lon(address)
         city_id = lat_lon_to_city_name(lat, lon)
-        e_pic_url = est.get('name') if est.get('name') else ''
+        e_pic_url = est.get('e_pic') if est.get('e_pic') else ''
         est_id = create_establishment(name, menu_obj, city_id, lat, lon, address, description, keywords, e_pic_url, uid)
         return jsonify({'message': 'Establishment created successfully', 'est_id': est_id}), 200
     except ValueError as e:
@@ -630,13 +630,13 @@ def get_all_establishments():
 @app.route('/get-est-by-city', methods=['POST'])
 @cross_origin()
 def get_establishments_by_city_route():
-    city_id = int(request.form.get('city_id'))
+    city_id = request.get_json().get('city_id')
     try:
         ests = get_establishments_by_city(city_id)
         if ests:
             return jsonify(ests), 200
         else:
-            return jsonify({'message': 'No establishments found.'}), 404
+            return jsonify([]), 200
     except ValueError as e:
         return jsonify({'message': str(e)}), 400
 
