@@ -6,10 +6,14 @@ export const useEstablishmentStore = defineStore(
     id: 'establishment',
     state: () => ({
       establishment: {},
+      allEstablishments: [],
     }),
     getters: {
       getEstablishment(state) {
         return state.establishment
+      },
+      getAllEstablishments(state) {
+        return state.allEstablishments
       }
     },
     actions: {
@@ -36,6 +40,12 @@ export const useEstablishmentStore = defineStore(
           .then((response) => {
             this.establishment = response.data;
             this.$toast.add({ severity: 'success', summary: 'Success', detail: 'Establishment created.', life: 2000 });
+          });
+      },
+      getEstablishmentsByCity(city_name) {
+        axios.post('http://127.0.0.1:8080/get-est-by-city', { city_id: city_name })
+          .then((response) => {
+            this.allEstablishments = response.data;
           });
       }
     },

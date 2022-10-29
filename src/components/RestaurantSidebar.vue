@@ -1,26 +1,181 @@
 <!-- List of Restaurants -->
 <template>
-    <p>Test</p>
+
+    <div class="surface-card shadow-2 border-round p-4" style="width: 100%;height: 100%;">
+        <div class="flex justify-content-between align-items-center" style="height: 10%;">
+            <span class="text-xl text-900 font-medium">Establishments in your Area</span>
+            <div>
+                <!-- Todo: Filter popups -->
+                <Button icon="pi pi-ellipsis-v" class="p-button-text p-button-plain p-button-rounded"
+                    @click="$refs.menu4.toggle($event)"></Button>
+                <Menu ref="menu4" :popup="true" :model="items"></Menu>
+            </div>
+        </div>
+        <ul class="list-none p-0 m-0" style="overflow-y:scroll;height:90%;overflow-x:hidden">
+            <li class="mb-5 cursor-pointer" v-for="establishment in allEstablishments" @click="establishmentFocus(establishment)">
+                <div class="align-items-center">
+                    <div>
+                        <div class="text-900 font-medium text-lg mb-2">{{ establishment.name }}</div>
+                        <div class="flex align-items-center">
+                            <span v-for="k in establishment.keywords" class="flex p-1 bg-green-100 text-green-600 font-medium text-sm border-round ml-0 mr-1">{{  k  }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="block benefits">
+                    <strong>
+                        <p class="pop-text" style="text-align:center">Popularity Meter</p>
+                    </strong>
+                    <div class="input-flex-container">
+                        <div class="input active">
+                            <span data-year="Free Soda"></span>
+                        </div>
+                        <div class="input active">
+                            <span data-year="5% Off"></span>
+                        </div>
+                        <div class="input active">
+                            <span data-year="5% Off"></span>
+                        </div>
+                        <div class="input active">
+                            <span data-year="Free Burger"></span>
+                        </div>
+                        <div class="input">
+                            <span data-year="Free Burger"></span>
+                        </div>
+                    </div>
+                </div>
+                <p class='order-text m-0'>Order before the timer to receive highlighted benefits!</p>
+            </li>
+        </ul>
+    </div>
 </template>
 
 <script>
-export default{
+export default {
     name: 'RestaurantSidebar',
     props: {
-        lat: {
-            type: Number,
-            default: 0
-        },
-        lng: {
-            type: Number,
-            default: 0
+        allEstablishments: {
+            type: Array,
+            required: true
         }
     },
     data() {
         return {
             map: null,
-            marker: null
+            marker: null,
         }
     },
+    methods: {
+        establishmentFocus(establishment) {
+            console.log(establishment);
+            this.$emit('establishmentFocus', establishment.eid);
+        },
+    }
 }
 </script>
+
+<style>
+.input-flex-container {
+    display: flex;
+    justify-content: space-around;
+    /* align-items: center; */
+    width: 20vw;
+    height: 100px;
+    max-width: 1000px;
+    position: relative;
+    z-index: 0;
+}
+
+.input {
+    width: 25px;
+    height: 25px;
+    background-color: #2C3E50;
+    position: relative;
+    border-radius: 50%;
+}
+
+.input::before,
+.input::after {
+    content: "";
+    display: block;
+    position: absolute;
+    z-index: -1;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: #2C3E50;
+    width: 2vw;
+    height: 5px;
+    max-width: 100px;
+}
+
+.input::before {
+    left: calc(-2vw + 12.5px);
+}
+
+.input::after {
+    right: calc(-2vw + 12.5px);
+}
+
+.input.active {
+    background-color: #2C3E50;
+}
+
+.input.active::before {
+    background-color: #2C3E50;
+}
+
+.input.active::after {
+    background-color: #AEB6BF;
+}
+
+.input.active span {
+    font-weight: 700;
+}
+
+.input.active span::before {
+    font-size: 13px;
+}
+
+.input.active span::after {
+    font-size: 15px;
+}
+
+.input.active~.input,
+.input.active~.input::before,
+.input.active~.input::after {
+    background-color: #AEB6BF;
+}
+
+.input span {
+    width: 1px;
+    height: 1px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    visibility: hidden;
+    color: #2C3E50;
+}
+
+.input span::before,
+.input span::after {
+    visibility: visible;
+    position: absolute;
+    left: 50%;
+}
+
+.input span::after {
+    content: attr(data-year);
+    top: 25px;
+    transform: translateX(-50%);
+    font-size: 14px;
+}
+
+.input span::before {
+    content: attr(data-info);
+    top: -65px;
+    width: 70px;
+    transform: translateX(-5px) rotateZ(-45deg);
+    font-size: 12px;
+    text-indent: -10px;
+}
+</style>
