@@ -67,7 +67,7 @@ export default {
     methods: {
         establishmentFocus(establishment) {
             console.log(establishment);
-            this.$emit('establishmentFocus', establishment.eid);
+            this.$emit('establishmentFocus', establishment);
         },
     }
 }
