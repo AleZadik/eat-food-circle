@@ -24,6 +24,8 @@ import Menubar from 'primevue/menubar';
 import ProgressSpinner from 'primevue/progressspinner';
 import Chip from 'primevue/chip';
 import Chips from 'primevue/chips';
+import DataView from 'primevue/dataview';
+import Panel from 'primevue/panel';
 // import primevue css
 
 import 'primevue/resources/themes/vela-green/theme.css';
@@ -62,5 +64,7 @@ app.component('Menubar', Menubar)
 app.component('ProgressSpinner', ProgressSpinner);
 app.component('Chip', Chip);
 app.component('Chips', Chips);
+app.component('DataView', DataView);
+app.component('Panel', Panel);
 
 app.mount('#app')
