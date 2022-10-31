@@ -285,7 +285,7 @@ def lat_lon_to_city_name(lat, lon):
     geolocator = Nominatim(user_agent="foodie")
     location = geolocator.reverse("{}, {}".format(lat, lon))
     try:
-        return location.raw['address']['city']
+        return location.raw['address']['city'].lower()
     except KeyError:
         return None
 
@@ -358,18 +358,22 @@ def calculate_order_total(order_obj, eid):
     #     raise ValueError("order_obj must be a dictionary.")
     # if not isinstance(eid, str):
     #     raise ValueError("eid must be a string.")
-
+    print(order_obj)
+    print(eid)
     est = get_establishment(eid)
     menu = est['menu']
+    print(menu)
     total = 0
     for pid in order_obj:
-        menu_item = menu.get(pid)
+        menu_item = menu[int(pid)-1]
         if not menu_item:
             continue
         total += menu_item['price'] * order_obj[pid] # price * quantity
     return total
 
-def create_order(order_obj, total, est_id, uid, lat, lon, cid, ts_group):
+
+#order_id = create_order(items, total, eid, uid, lat, lon, cid, 'pending')
+def create_order(order_obj, total, est_id, uid, lat, lon, cid, status, ts_group=None):
     '''
     Creates an order in the database
 
@@ -413,6 +417,7 @@ def create_order(order_obj, total, est_id, uid, lat, lon, cid, ts_group):
         'lat': lat,
         'lon': lon,
         'cid': cid,
+        'status': status,
         'ts_group': ts_group,
         'order_obj': order_obj,
         'created_at': time.time()
@@ -594,6 +599,7 @@ def create_establishment_route():
 def update_establishment_route():
     est_id = request.get_json().get('eid')
     changes = request.get_json().get('changes')
+    #changes['menu'] = [{"id":1,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/src/assets/burger1.png"},{"id":2,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/src/assets/burger2.png"},{"id":3,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/src/assets/burger3.png"},{"id":4,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/src/assets/burger4.png"},{"id":5,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/src/assets/desserts1.png"},{"id":6,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/src/assets/desserts2.png"},{"id":7,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/src/assets/desserts3.png"},{"id":8,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/src/assets/salad1.png"}]
     try:
         if changes.get('address'):
             lat, lon = address_to_lat_lon(changes.get('address'))
@@ -707,18 +713,19 @@ def update_user_route():
     except ValueError as e:
         return jsonify({'message': 'Invalid value(s) in user update.'}), 400
 
-@app.route('/create-order', methods=['POST'])
+@app.route('/submit-order', methods=['POST'])
 @cross_origin()
 def create_order_route():
-    est_id = request.form.get('est_id')
-    u_id = request.form.get('u_id')
-    items = json.loads(request.form.get('items'))
-    address = request.form.get('address')
-    lat, lon = address_to_lat_lon(address)
-    cid = lat_lon_to_city_name(lat, lon)
     try:
-        total = calculate_order_total(items, est_id)
-        order_id = create_order(items, total, est_id, u_id, lat, lon, cid, 'pending')
+        order = request.get_json().get('order')
+        eid = order.get('eid')
+        uid = order.get('uid')
+        items = order.get('items')
+        # address = order.get('address')
+        lat, lon = float(order.get('lat')), float(order.get('lon'))
+        cid = lat_lon_to_city_name(lat, lon).lower()
+        total = calculate_order_total(items, eid)
+        order_id = create_order(items, total, eid, uid, lat, lon, cid, 'pending')
         return jsonify({'message': 'Order created successfully', 'order_id': order_id}), 200
     except ValueError as e:
         return jsonify({'message': str(e)}), 400
