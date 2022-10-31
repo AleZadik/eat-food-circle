@@ -1,4 +1,23 @@
 <template>
+    <Dialog v-model:visible="display" :modal="true">
+        <template #header>
+            <h3>Order from {{ clickedEstablishment.name }}</h3>
+        </template>
+
+        <MenuOptions :establishment=clickedEstablishment @updateTotal="updateTotal"></MenuOptions>
+
+        <template #footer>
+            <!-- Show the Total aligned on the right -->
+            <div class="p-d-flex p-jc-between">
+                <div class="flex justify-content-end mt-2">
+                    <span class="p-text-bold" style="width:200px;">Total: {{ total }}</span>
+                </div>
+                <div class="flex justify-content-end mt-2">
+                    <Button @click="submitOrder" style="width:200px;" icon="pi pi-shopping-cart" label="Complete Purchase" class="mr-0 p-button-success width-200" />
+                </div>
+            </div>
+        </template>
+    </Dialog>
     <Menubar :model="items">
         <template #start>
             <img alt="logo" src="https://www.primefaces.org/wp-content/uploads/2020/05/placeholder.png" height="40"
@@ -24,6 +43,7 @@
 
 <script>
 import RestaurantSidebar from '../components/RestaurantSidebar.vue'
+import MenuOptions from '../components/MenuOptions.vue'
 import { API_KEY } from "./API_KEY";
 import { Loader } from "google-maps";
 import { useEstablishmentStore } from '../stores/establishmentStore'
@@ -42,17 +62,21 @@ export default {
         }
     },
     components: {
-        RestaurantSidebar
+        RestaurantSidebar,
+        MenuOptions
     },
     data() {
         return {
             gmap: {},
             establishmentMarkers: [],
+            display: false,
+            clickedEstablishment: {},
+            total: 0,
+            currOrder: {},
         }
     },
     mounted() {
-        this.getEstabs();
-        loader.load().then(this.initializeMap);
+        loader.load().then((google) => this.initializeMap(google));
     },
     methods: {
         getEstabs() {
@@ -60,16 +84,20 @@ export default {
                 this.establishmentStore.getEstablishmentsByCity(this.authStore.user.cid);
             }
         },
-        establishmentFocus(eid) {
+        establishmentFocus(est) {
+            this.clickedEstablishment = est;
+            let eid = est.eid;
             this.establishmentMarkers.forEach(obj => {
                 if (obj.eid === eid) {
                     this.gmap.setCenter(obj.marker.getPosition());
                     this.gmap.setZoom(15);
-                    obj.marker.infoWindow.open(this.gmap, obj.marker);
+                    this.display = true;
+                    // obj.marker.infoWindow.open(this.gmap, obj.marker);
                 }
             });
         },
         initializeMap(google) {
+            this.getEstabs();
             var mapOptions = {
                 zoom: 13,
                 center: { lat: this.authStore.user.lat, lng: this.authStore.user.lon },
@@ -111,6 +139,19 @@ export default {
             }, 100);
 
             marker.setMap(this.gmap);
+        },
+        updateTotal(orderTotal) {
+            this.total = orderTotal.total;
+            this.currOrder.items = orderTotal.order;
+        },
+        submitOrder(){
+            this.currOrder.uid = this.authStore.user.uid;
+            this.currOrder.eid = this.clickedEstablishment.eid;
+            this.currOrder.lat = this.authStore.user.lat;
+            this.currOrder.lon = this.authStore.user.lon;
+            this.currOrder.status = "Pending";
+            this.establishmentStore.submitOrder(this.currOrder);
+            this.display = false;
         }
     },
     watch: {
@@ -151,11 +192,19 @@ export default {
                     });
                     marker.addListener("click", () => {
                         this.gmap.setCenter(marker.getPosition());
-                        infowindow.open(this.gmap, marker);
+                        this.gmap.setZoom(15);
+                        this.clickedEstablishment = establishment;
+                        this.display = true;
                     });
                     marker.infoWindow = infowindow;
                     this.establishmentMarkers.push({ eid: eid, marker: marker });
                 });
+            },
+            deep: true
+        },
+        clickedEstablishment: {
+            handler: function () {
+                this.display = true;
             },
             deep: true
         }
