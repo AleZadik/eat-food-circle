@@ -81,7 +81,7 @@ export default {
     methods: {
         getEstabs() {
             if (this.authStore.user) {
-                this.establishmentStore.getEstablishmentsByCity(this.authStore.user.cid);
+                this.establishmentStore.getEstablishmentsByCity(this.authStore.user.cid, this.authStore.user.lat, this.authStore.user.lon);
             }
         },
         establishmentFocus(est) {
