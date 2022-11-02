@@ -12,12 +12,16 @@
             </div>
         </div>
         <ul class="list-none p-0 m-0" style="overflow-y:scroll;height:90%;overflow-x:hidden">
-            <li class="mb-5 cursor-pointer" v-for="establishment in allEstablishments" @click="establishmentFocus(establishment)">
+            <li class="mb-5 cursor-pointer" v-for="establishment in allEstablishments"
+                @click="establishmentFocus(establishment)">
                 <div class="align-items-center">
                     <div>
                         <div class="text-900 font-medium text-lg mb-2">{{ establishment.name }}</div>
                         <div class="flex align-items-center">
-                            <span v-for="k in establishment.keywords" class="flex p-1 bg-green-100 text-green-600 font-medium text-sm border-round ml-0 mr-1">{{  k  }}</span>
+                            <span v-for="k in establishment.keywords"
+                                class="flex p-1 bg-green-100 text-green-600 font-medium text-sm border-round ml-0 mr-1">{{
+                                        k
+                                }}</span>
                         </div>
                     </div>
                 </div>
@@ -26,21 +30,26 @@
                         <p class="pop-text" style="text-align:center">Popularity Meter</p>
                     </strong>
                     <div class="input-flex-container">
-                        <div class="input active">
-                            <span data-year="Free Soda"></span>
+                        <!-- @TODO: Refactor when I get the chance to use v-for -->
+                        <div class="input active"> <!-- first is always active -->
+                            <span :data-year="establishment.promo ? establishment.promo[0] : 'Free Soda'"></span>
                         </div>
-                        <div class="input active">
-                            <span data-year="5% Off"></span>
+                        <div v-bind:class="establishment.popmeter >= 2 ? 'input active' : 'input'">
+                            <span :data-year="establishment.promo ? establishment.promo[1] : '5% Off'"></span>
                         </div>
-                        <div class="input active">
-                            <span data-year="5% Off"></span>
+                        <div v-bind:class="establishment.popmeter >= 3 ? 'input active' : 'input'">
+                            <span :data-year="establishment.promo ? establishment.promo[2] : '5% Off'"></span>
                         </div>
-                        <div class="input active">
-                            <span data-year="Free Burger"></span>
+                        <div v-bind:class="establishment.popmeter >= 4 ? 'input active' : 'input'">
+                            <span :data-year="establishment.promo ? establishment.promo[3] : 'Free Burger'"></span>
                         </div>
-                        <div class="input">
-                            <span data-year="Free Burger"></span>
+                        <div v-bind:class="establishment.popmeter >= 5 ? 'input active' : 'input'">
+                            <span :data-year="establishment.promo ? establishment.promo[4] : '10% Off'"></span>
                         </div>
+                    </div>
+                    <div class="block text-right w-full pr-4">
+                        <p v-if="establishment.timer && establishment.timer > 0">Timer:  {{establishment.timer}}s</p>
+                        <p v-else>Timer:  900s</p>
                     </div>
                 </div>
                 <p class='order-text m-0'>Order before the timer to receive highlighted benefits!</p>
@@ -69,7 +78,10 @@ export default {
             console.log(establishment);
             this.$emit('establishmentFocus', establishment);
         },
-    }
+    },
+    mounted() {
+        console.log(this.allEstablishments);
+    },
 }
 </script>
 
