@@ -42,8 +42,8 @@ export const useEstablishmentStore = defineStore(
             this.$toast.add({ severity: 'success', summary: 'Success', detail: 'Establishment created.', life: 2000 });
           });
       },
-      getEstablishmentsByCity(city_name) {
-        axios.post('http://127.0.0.1:8080/get-est-by-city', { city_id: city_name })
+      getEstablishmentsByCity(city_name, lat, lon) {
+        axios.post('http://127.0.0.1:8080/get-est-by-city', { city_id: city_name, lat: lat, lon: lon })
           .then((response) => {
             this.allEstablishments = response.data;
           });
