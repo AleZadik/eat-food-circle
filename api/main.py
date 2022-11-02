@@ -23,7 +23,7 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 def gen_random_str(str_len=8):
     '''
     Generates a random string of a given length made up with letters and digits
-    
+
     Args:
         str_len (int): The length of the string to be generated
 
@@ -180,7 +180,8 @@ def update_establishment(est_id, changes):
     # if not isinstance(changes, dict):
     #     raise ValueError("changes must be a dictionary.")
     if not any(field in changes for field in ['name', 'menu', 'city_id', 'lat', 'lon', 'address', 'e_pic_url']):
-        raise KeyError("changes must contain at least one of the following fields: name, menu, city_id, lat, lon, address, e_pic_url")
+        raise KeyError(
+            "changes must contain at least one of the following fields: name, menu, city_id, lat, lon, address, e_pic_url")
     est_ref = db.collection('establishments').document(est_id)
     est = est_ref.get()
     if not est.exists:
@@ -304,7 +305,7 @@ def create_city(city_name):
     '''
     # if not isinstance(city_name, str):
     #     raise ValueError("city_name must be a string.")
-    
+
     city_name = city_name.lower()
     city_ref = db.collection('cities')
     city = city_ref.document(city_name).get()
@@ -368,9 +369,8 @@ def calculate_order_total(order_obj, eid):
         menu_item = menu[int(pid)-1]
         if not menu_item:
             continue
-        total += menu_item['price'] * order_obj[pid] # price * quantity
+        total += menu_item['price'] * order_obj[pid]  # price * quantity
     return total
-
 
 #order_id = create_order(items, total, eid, uid, lat, lon, cid, 'pending')
 def create_order(order_obj, total, est_id, uid, lat, lon, cid, status, ts_group=None):
@@ -423,6 +423,32 @@ def create_order(order_obj, total, est_id, uid, lat, lon, cid, status, ts_group=
         'created_at': time.time()
     })
     return order_id
+
+# Returns a list of orders that were placed in the last 15 minutes using tsgroup and city_id
+def query_for_city_circles(city_id):
+    now = time.time()
+    max_time = now - 900
+    orders_ref = db.collection('orders')
+    orders = orders_ref.where('cid', '==', city_id).where(
+        'ts_group', '>', max_time).stream()
+    orders_list_sorted = []
+    for order in orders:
+        orders_list_sorted.append(order.to_dict())
+    orders_list_sorted.sort(key=lambda x: x['ts_group'])
+    return orders_list_sorted
+
+# Returns a list of orders that were placed in the last 15 minutes using tsgroup and eid
+def query_for_circle_ts_eid(eid):
+    now = time.time()
+    max_time = now - 900
+    orders_ref = db.collection('orders')
+    orders = orders_ref.where('eid', '==', eid).where(
+        'ts_group', '>', max_time).stream()
+    orders_list_sorted = []
+    for order in orders:
+        orders_list_sorted.append(order.to_dict())
+    orders_list_sorted.sort(key=lambda x: x['ts_group'])
+    return orders_list_sorted
 
 def get_orders_by_establishment(eid):
     '''
@@ -555,6 +581,27 @@ def get_user_by_email(email):
     users = user_ref.where('email', '==', email).stream()
     return [user.to_dict() for user in users]
 
+# Returns true if the lat1 and lon2 are within the radius of 'radius_in_miles'
+# of the lat2 and lon2
+# units for the latitude and longitude come from google maps coordinates
+def is_within_radius(lat1, lon1, lat2, lon2, radius_in_miles):
+    """
+        Todo: Add docstring
+    """
+    lat1 = math.radians(lat1)
+    lon1 = math.radians(lon1)
+    lat2 = math.radians(lat2)
+    lon2 = math.radians(lon2)
+    # Uses the haversine formula to calculate the distance between two points in a sphere
+    # Note:  Approximate error in distance 0.3%
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    distance = 3959 * c # This is the distance in miles (1rad ~= 3959 miles on earth)
+    print("Distance: " + str(distance))
+    return distance <= radius_in_miles * 1.1
+
 @app.route('/')
 @cross_origin()
 def root():
@@ -587,7 +634,8 @@ def create_establishment_route():
         lat, lon = address_to_lat_lon(address)
         city_id = lat_lon_to_city_name(lat, lon)
         e_pic_url = est.get('e_pic') if est.get('e_pic') else ''
-        est_id = create_establishment(name, menu_obj, city_id, lat, lon, address, description, keywords, e_pic_url, uid)
+        est_id = create_establishment(
+            name, menu_obj, city_id, lat, lon, address, description, keywords, e_pic_url, uid)
         return jsonify({'message': 'Establishment created successfully', 'est_id': est_id}), 200
     except ValueError as e:
         return jsonify({'message': str(e)}), 400
@@ -630,15 +678,35 @@ def delete_establishment_route():
 
 @app.route('/get-all-est', methods=['POST'])
 @cross_origin()
-def get_all_establishments():
+def get_all_establishments_route():
     return jsonify(get_all_establishments()), 200
 
 @app.route('/get-est-by-city', methods=['POST'])
 @cross_origin()
 def get_establishments_by_city_route():
     city_id = request.get_json().get('city_id')
+    lat = float(request.get_json().get('lat'))
+    lon = float(request.get_json().get('lon'))
     try:
         ests = get_establishments_by_city(city_id)
+        valid_orders = query_for_city_circles(city_id)
+        pop_meter = {}
+        # Adds a new field to all establishments called 'popmeter' which is a number
+        for est in ests:
+            est['popmeter'] = 0
+
+        # Now for every valid_order placed in the city we add 1 to the establishment's
+        # popmeter if the order was placed at that establishment and 
+        # the given latitude and longitude is within a 1 mile radius of the order's lat and lon
+        for order in valid_orders:
+            print("Checking order: ", order)
+            if is_within_radius(lat, lon, order['lat'], order['lon'], 1):
+                for est in ests:
+                    if est['eid'] == order['eid']:
+                            est['popmeter'] += 1 
+                            est['timer'] = math.floor(order['ts_group'] + 900 - time.time()) # For Front-end
+        print("Returned establishments: ")
+        print(json.dumps(ests, indent=4, sort_keys=True))
         if ests:
             return jsonify(ests), 200
         else:
@@ -692,7 +760,8 @@ def create_user_route():
     try:
         city_name = lat_lon_to_city_name(lat, lon)
         cid = create_city(city_name)
-        user_data = create_user(gen_random_str(), email, name, lat, lon, cid['cid'], "unset")
+        user_data = create_user(gen_random_str(), email,
+                                name, lat, lon, cid['cid'], "unset")
         return jsonify(user_data), 200
     except ValueError as e:
         return jsonify({'message': str(e)}), 400
@@ -725,7 +794,8 @@ def create_order_route():
         lat, lon = float(order.get('lat')), float(order.get('lon'))
         cid = lat_lon_to_city_name(lat, lon).lower()
         total = calculate_order_total(items, eid)
-        order_id = create_order(items, total, eid, uid, lat, lon, cid, 'pending')
+        order_id = create_order(items, total, eid, uid,
+                                lat, lon, cid, 'pending', time.time())
         return jsonify({'message': 'Order created successfully', 'order_id': order_id}), 200
     except ValueError as e:
         return jsonify({'message': str(e)}), 400
