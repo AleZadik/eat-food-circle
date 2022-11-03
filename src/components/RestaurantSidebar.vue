@@ -6,9 +6,9 @@
             <span class="text-xl text-900 font-medium">Establishments in your Area</span>
             <div>
                 <!-- Todo: Filter popups -->
-                <Button icon="pi pi-ellipsis-v" class="p-button-text p-button-plain p-button-rounded"
-                    @click="$refs.menu4.toggle($event)"></Button>
-                <Menu ref="menu4" :popup="true" :model="items"></Menu>
+                <!-- <Button icon="pi pi-ellipsis-v" class="p-button-text p-button-plain p-button-rounded"
+                    @click="$refs.menu4.toggle($event)"></Button> -->
+                <!-- <Menu ref="menu4" :popup="true" :model="items"></Menu> -->
             </div>
         </div>
         <ul class="list-none p-0 m-0" style="overflow-y:scroll;height:90%;overflow-x:hidden">
@@ -31,16 +31,16 @@
                     </strong>
                     <div class="input-flex-container">
                         <!-- @TODO: Refactor when I get the chance to use v-for -->
-                        <div class="input active"> <!-- first is always active -->
+                        <div v-bind:class="establishment.popmeter <= 1 ? 'input active' : 'input'"> <!-- first is always active -->
                             <span :data-year="establishment.promo ? establishment.promo[0] : 'Free Soda'"></span>
                         </div>
-                        <div v-bind:class="establishment.popmeter >= 2 ? 'input active' : 'input'">
+                        <div v-bind:class="establishment.popmeter <= 2 ? 'input active' : 'input'">
                             <span :data-year="establishment.promo ? establishment.promo[1] : '5% Off'"></span>
                         </div>
-                        <div v-bind:class="establishment.popmeter >= 3 ? 'input active' : 'input'">
+                        <div v-bind:class="establishment.popmeter <= 3 ? 'input active' : 'input'">
                             <span :data-year="establishment.promo ? establishment.promo[2] : '5% Off'"></span>
                         </div>
-                        <div v-bind:class="establishment.popmeter >= 4 ? 'input active' : 'input'">
+                        <div v-bind:class="establishment.popmeter <= 4 ? 'input active' : 'input'">
                             <span :data-year="establishment.promo ? establishment.promo[3] : 'Free Burger'"></span>
                         </div>
                         <div v-bind:class="establishment.popmeter >= 5 ? 'input active' : 'input'">
@@ -48,7 +48,7 @@
                         </div>
                     </div>
                     <div class="block text-right w-full pr-4">
-                        <p v-if="establishment.timer && establishment.timer > 0">Timer:  {{establishment.timer}}s</p>
+                        <p class='estab-timer' v-if="establishment.timer && establishment.timer > 0">Timer: {{establishment.timer}} s</p>
                         <p v-else>Timer:  900s</p>
                     </div>
                 </div>
@@ -80,7 +80,17 @@ export default {
         },
     },
     mounted() {
-        console.log(this.allEstablishments);
+        // For each establishment, make establishment.timer decrease by 1 every second if they differ from 900
+        setInterval(() => {
+            this.allEstablishments.forEach(establishment => {
+                if (establishment.timer && establishment.timer > 0 && establishment.timer != 900) {
+                    establishment.timer -= 1;
+                }
+                else if (establishment.timer && establishment.timer <= 0) {
+                    establishment.timer = 900;
+                }
+            });
+        }, 1000);
     },
 }
 </script>
