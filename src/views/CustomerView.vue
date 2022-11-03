@@ -72,7 +72,7 @@ export default {
             display: false,
             clickedEstablishment: {},
             total: 0,
-            currOrder: {},
+            currOrder: {items: []},
         }
     },
     mounted() {
@@ -152,6 +152,7 @@ export default {
             this.currOrder.status = "Pending";
             this.establishmentStore.submitOrder(this.currOrder);
             this.display = false;
+            this.getEstabs();
         }
     },
     watch: {
