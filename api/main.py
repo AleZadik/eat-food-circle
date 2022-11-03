@@ -425,9 +425,9 @@ def create_order(order_obj, total, est_id, uid, lat, lon, cid, status, ts_group=
     return order_id
 
 # Returns a list of orders that were placed in the last 15 minutes using tsgroup and city_id
-def query_for_city_circles(city_id):
+def query_for_city_circles(city_id, minutes=15):
     now = time.time()
-    max_time = now - 900
+    max_time = now - minutes*60
     orders_ref = db.collection('orders')
     orders = orders_ref.where('cid', '==', city_id).where(
         'ts_group', '>', max_time).stream()
@@ -438,9 +438,9 @@ def query_for_city_circles(city_id):
     return orders_list_sorted
 
 # Returns a list of orders that were placed in the last 15 minutes using tsgroup and eid
-def query_for_circle_ts_eid(eid):
+def query_for_circle_ts_eid(eid, minutes=15):
     now = time.time()
-    max_time = now - 900
+    max_time = now - minutes*60
     orders_ref = db.collection('orders')
     orders = orders_ref.where('eid', '==', eid).where(
         'ts_group', '>', max_time).stream()
@@ -703,8 +703,8 @@ def get_establishments_by_city_route():
             if is_within_radius(lat, lon, order['lat'], order['lon'], 1):
                 for est in ests:
                     if est['eid'] == order['eid']:
-                            est['popmeter'] += 1 
-                            est['timer'] = math.floor(order['ts_group'] + 900 - time.time()) # For Front-end
+                        est['popmeter'] += 1 
+                        est['timer'] = math.floor(order['ts_group'] + 900 - time.time()) # For Front-end
         print("Returned establishments: ")
         print(json.dumps(ests, indent=4, sort_keys=True))
         if ests:
@@ -794,8 +794,16 @@ def create_order_route():
         lat, lon = float(order.get('lat')), float(order.get('lon'))
         cid = lat_lon_to_city_name(lat, lon).lower()
         total = calculate_order_total(items, eid)
-        order_id = create_order(items, total, eid, uid,
-                                lat, lon, cid, 'pending', time.time())
+
+        valid_orders = query_for_circle_ts_eid(eid)
+        current_ts = time.time()
+        for order in valid_orders:
+            # Find the first order within 1 mile
+            if is_within_radius(lat, lon, order['lat'], order['lon'], 1):
+                current_ts = order['ts_group']
+                break
+
+        order_id = create_order(items, total, eid, uid, lat, lon, cid, 'pending', current_ts)
         return jsonify({'message': 'Order created successfully', 'order_id': order_id}), 200
     except ValueError as e:
         return jsonify({'message': str(e)}), 400
