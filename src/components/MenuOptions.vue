@@ -1,5 +1,5 @@
 <template>
-	<div class="card">
+	<div class="card" v-if="menu">
 		<DataView :value="menu" :layout="list" :paginator="true" :rows="9">
 			<template #header>
 			</template>
@@ -54,7 +54,7 @@ export default {
 		return {
 			display: false,
 			order: {},
-			menu: {},
+			menu: null,
 		}
 	},
 	mounted() {
