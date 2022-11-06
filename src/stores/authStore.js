@@ -26,6 +26,7 @@ export const useAuthStore = defineStore(
         })
           .then((response) => {
             this.user = response.data;
+            sessionStorage.setItem('user', JSON.stringify(this.user));
           });
       },
       updateUserType(type) {
@@ -39,8 +40,22 @@ export const useAuthStore = defineStore(
         })
           .then((response) => {
             this.user.u_type = type;
+            sessionStorage.setItem('user', JSON.stringify(this.user));
             this.$router.push({name: type});
           });
       },
+      updateUserByAddress(address) {
+        axios.post('http://127.0.0.1:8080/update-user-by-address', {
+          address: address,
+          uid: this.user.uid,
+        })
+          .then((response) => {
+            this.user.lat = response.data.lat;
+            this.user.lon = response.data.lon;
+            this.user.cid = response.data.cid;
+            sessionStorage.setItem('user', JSON.stringify(this.user));
+            this.$router.go();
+          });
+        }
     },
   })
