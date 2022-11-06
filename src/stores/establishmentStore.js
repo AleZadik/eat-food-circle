@@ -32,13 +32,15 @@ export const useEstablishmentStore = defineStore(
         axios.post('http://127.0.0.1:8080/get-est', { uid: id })
           .then((response) => {
             this.establishment = response.data;
-            return response.data;
+          })
+          .catch((error) => {
+            console.log(error);
           });
       },
       createEstablishment(uid, establishment) {
         axios.post('http://127.0.0.1:8080/create-est', { uid: uid, establishment: establishment })
           .then((response) => {
-            this.establishment = response.data;
+            this.establishment = establishment;
             this.$toast.add({ severity: 'success', summary: 'Success', detail: 'Establishment created.', life: 2000 });
           });
       },

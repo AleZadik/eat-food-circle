@@ -169,9 +169,7 @@ export default {
             }
         },
         getEstablishment() {
-            // See if the user has an eid field
             if (this.authStore.user.uid) {
-                // Get the establishment
                 this.establishmentStore.getEstablishmentByUID(this.authStore.user.uid);
             }
         },
@@ -191,8 +189,8 @@ export default {
     watch: {
         establishmentStore: {
             handler: function (val, oldVal) {
-                if (val.establishment) {
-                    this.establishment = val.establishment;
+                if(this.establishmentStore.establishment && this.establishmentStore.establishment.eid) {
+                    this.establishment = this.establishmentStore.establishment;
                 }
             },
             deep: true

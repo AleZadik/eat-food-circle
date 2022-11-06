@@ -167,38 +167,43 @@ export default {
                     let eid = establishment.eid;
                     let tags = establishment.keywords;
                     let latlng = new google.maps.LatLng(lat, lng);
-
-                    let marker = new google.maps.Marker({
-                        position: latlng,
-                        map: this.gmap,
-                        title: name,
-                        icon: { // temporary icon
-                            url: "https://cdn2.iconfinder.com/data/icons/places-4/100/leaf_place_marker_location_nature_eco-512.png",
-                            scaledSize: new google.maps.Size(40, 40),
-                        }
-                    });
-                    let contentString = `
-                        <div class="card" style="width: 18rem;">
-                            <div class="card-body">
-                                <h5 class="card-title text-center">${name}</h5>
-                                <h6 class="card-subtitle mb-2 text-muted text-center">${address}</h6>
-                                <p class="card-text">${description}</p>
-                                <a href="#" class="card-link">Card link</a>
-                                <a href="#" class="card-link">Another link</a>
+                    let marker = this.establishmentMarkers.find(obj => obj.eid === eid);
+                    if (marker) {
+                        marker.marker.setPosition(latlng);
+                    }
+                    else{
+                        marker = new google.maps.Marker({
+                            position: latlng,
+                            map: this.gmap,
+                            title: name,
+                            icon: { // temporary icon
+                                url: "https://cdn2.iconfinder.com/data/icons/places-4/100/leaf_place_marker_location_nature_eco-512.png",
+                                scaledSize: new google.maps.Size(40, 40),
+                            }
+                        });
+                        let contentString = `
+                            <div class="card" style="width: 18rem;">
+                                <div class="card-body">
+                                    <h5 class="card-title text-center">${name}</h5>
+                                    <h6 class="card-subtitle mb-2 text-muted text-center">${address}</h6>
+                                    <p class="card-text">${description}</p>
+                                    <a href="#" class="card-link">Card link</a>
+                                    <a href="#" class="card-link">Another link</a>
+                                </div>
                             </div>
-                        </div>
-                    `;
-                    let infowindow = new google.maps.InfoWindow({
-                        content: contentString
-                    });
-                    marker.addListener("click", () => {
-                        this.gmap.setCenter(marker.getPosition());
-                        this.gmap.setZoom(15);
-                        this.clickedEstablishment = establishment;
-                        this.display = true;
-                    });
-                    marker.infoWindow = infowindow;
-                    this.establishmentMarkers.push({ eid: eid, marker: marker });
+                        `;
+                        let infowindow = new google.maps.InfoWindow({
+                            content: contentString
+                        });
+                        marker.addListener("click", () => {
+                            this.gmap.setCenter(marker.getPosition());
+                            this.gmap.setZoom(15);
+                            this.clickedEstablishment = establishment;
+                            this.display = true;
+                        });
+                        marker.infoWindow = infowindow;
+                        this.establishmentMarkers.push({ eid: eid, marker: marker });
+                    }
                 });
             },
             deep: true

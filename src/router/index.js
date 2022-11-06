@@ -23,13 +23,13 @@ const router = createRouter({
       name: 'customer',
       component: CustomerView,
       beforeEnter: (to, from, next) => {
-        const authStore = useAuthStore()
+        const authStore = useAuthStore();
         if (authStore.user.u_type && authStore.user.u_type === "customer") {
-          next()
+          next();
         } else if (authStore.user.u_type && authStore.user.u_type === "establishment") {
-          next('/establishment')
+          next('/establishment');
         } else {
-          next('/')
+          next('/');
         }
       }
     },
@@ -38,14 +38,14 @@ const router = createRouter({
       name: 'establishment',
       component: EstablishmentView,
       beforeEnter: (to, from, next) => {
-        const authStore = useAuthStore()
+        const authStore = useAuthStore();
         if (authStore.user.u_type && authStore.user.u_type === "establishment") {
-          next()
+          next();
         } else if (authStore.user.u_type && authStore.user.u_type === "customer") {
-          next('/customer')
+          next('/customer');
         }
         else {
-          next('/')
+          next('/');
         }
       }
     },

@@ -25,7 +25,7 @@ export const useAuthStore = defineStore(
           }
         })
           .then((response) => {
-            this.user = response.data
+            this.user = response.data;
           });
       },
       updateUserType(type) {
@@ -33,15 +33,14 @@ export const useAuthStore = defineStore(
           this.$toast.add({ severity: 'error', summary: 'Wrong Type', detail: 'User type does not exist.', life: 2000 });
           return;
         }
-        let route = "/" + type;
         axios.post('http://127.0.0.1:8080/update-user', {
           changes: { u_type: type },
           uid: this.user.uid
         })
           .then((response) => {
-            this.$router.push(route);
-          }
-          );
+            this.user.u_type = type;
+            this.$router.push({name: type});
+          });
       },
     },
   })
