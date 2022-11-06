@@ -7,6 +7,7 @@ export const useEstablishmentStore = defineStore(
     state: () => ({
       establishment: {},
       allEstablishments: [],
+      circles: [],
     }),
     getters: {
       getEstablishment(state) {
@@ -47,13 +48,15 @@ export const useEstablishmentStore = defineStore(
       getEstablishmentsByCity(city_name, lat, lon) {
         axios.post('http://127.0.0.1:8080/get-est-by-city', { city_id: city_name, lat: lat, lon: lon })
           .then((response) => {
-            this.allEstablishments = response.data;
+            this.allEstablishments = response.data.establishments;
+            this.circles = response.data.circles;
           });
       },
       submitOrder(order) {
         axios.post('http://127.0.0.1:8080/submit-order', { order: order })
           .then((response) => {
             this.$toast.add({ severity: 'success', summary: 'Success', detail: 'Order submitted.', life: 2000 });
+            this.getEstablishmentsByCity(order.cid, order.lat, order.lon);
           });
       },
     }
