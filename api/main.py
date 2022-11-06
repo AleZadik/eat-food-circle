@@ -282,9 +282,10 @@ def lat_lon_to_city_name(lat, lon):
     #     raise ValueError("latitude must be a float.")
     # if not isinstance(lon, float):
     #     raise ValueError("longitude must be a float.")
-
+    time.sleep(1)
     geolocator = Nominatim(user_agent="foodie")
     location = geolocator.reverse("{}, {}".format(lat, lon))
+    print(location)
     try:
         return location.raw['address']['city'].lower()
     except KeyError:
@@ -336,7 +337,7 @@ def address_to_lat_lon(address):
     '''
     # if not isinstance(address, str):
     #     raise ValueError("address must be a string.")
-
+    time.sleep(1)
     geolocator = Nominatim(user_agent="foodie")
     location = geolocator.geocode(address)
     return (location.latitude, location.longitude)
@@ -434,7 +435,7 @@ def query_for_city_circles(city_id, minutes=15):
     orders_list_sorted = []
     for order in orders:
         orders_list_sorted.append(order.to_dict())
-    orders_list_sorted.sort(key=lambda x: x['ts_group'])
+    orders_list_sorted.sort(key=lambda x: x['created_at'])
     return orders_list_sorted
 
 # Returns a list of orders that were placed in the last 15 minutes using tsgroup and eid
@@ -627,7 +628,7 @@ def create_establishment_route():
         est = request.get_json().get('establishment')
         uid = request.get_json().get('uid')
         name = est.get('name')
-        menu_obj = est.get('menu')
+        menu_obj = est.get('menu') if est.get('menu') else [{"id":1,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/src/assets/burger1.png"},{"id":2,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/src/assets/burger2.png"},{"id":3,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/src/assets/burger3.png"},{"id":4,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/src/assets/burger4.png"},{"id":5,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/src/assets/desserts1.png"},{"id":6,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/src/assets/desserts2.png"},{"id":7,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/src/assets/desserts3.png"},{"id":8,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/src/assets/salad1.png"}]
         description = est.get('description')
         address = est.get('address')
         keywords = est.get('keywords')
@@ -690,14 +691,16 @@ def get_establishments_by_city_route():
     try:
         ests = get_establishments_by_city(city_id)
         valid_orders = query_for_city_circles(city_id)
-        pop_meter = {}
         # Adds a new field to all establishments called 'popmeter' which is a number
         for est in ests:
             est['popmeter'] = 0
+            est['max_ts'] = 0
 
         # Now for every valid_order placed in the city we add 1 to the establishment's
         # popmeter if the order was placed at that establishment and 
         # the given latitude and longitude is within a 1 mile radius of the order's lat and lon
+        circles = []
+        went = {}
         for order in valid_orders:
             print("Checking order: ", order)
             if is_within_radius(lat, lon, order['lat'], order['lon'], 1):
@@ -705,12 +708,23 @@ def get_establishments_by_city_route():
                     if est['eid'] == order['eid']:
                         est['popmeter'] += 1 
                         est['timer'] = math.floor(order['ts_group'] + 900 - time.time()) # For Front-end
-        print("Returned establishments: ")
+                        est['max_ts'] = order['ts_group'] + 900
+            lat_plus_lon_hash = str(order['lat']) + str(order['lon'])
+            if order['ts_group'] in went or lat_plus_lon_hash in went:
+                continue
+            else:
+                went[order['ts_group']] = True
+                went[lat_plus_lon_hash] = True
+                circles.append({
+                    'lat': order['lat'],
+                    'lon': order['lon'],
+                    'max_ts': order['ts_group'] + 900
+                })
         print(json.dumps(ests, indent=4, sort_keys=True))
         if ests:
-            return jsonify(ests), 200
+            return jsonify({"establishments": ests, "circles": circles}), 200
         else:
-            return jsonify([]), 200
+            return jsonify({"establishments": [], "circles": []}), 200
     except ValueError as e:
         return jsonify({'message': str(e)}), 400
 
@@ -805,6 +819,24 @@ def create_order_route():
 
         order_id = create_order(items, total, eid, uid, lat, lon, cid, 'pending', current_ts)
         return jsonify({'message': 'Order created successfully', 'order_id': order_id}), 200
+    except ValueError as e:
+        return jsonify({'message': str(e)}), 400
+
+# Dev Fun
+@app.route('/update-user-by-address', methods=['POST'])
+@cross_origin()
+def update_user_by_address_route():
+    try:
+        address = request.get_json().get('address')
+        uid = request.get_json().get('uid')
+        lat, lon = address_to_lat_lon(address)
+        city_name = lat_lon_to_city_name(lat, lon)
+        cid = create_city(city_name)
+        user_updated = edit_user(uid, {'lat': lat, 'lon': lon, 'cid': cid['cid']})
+        if user_updated:
+            return jsonify({'lat':lat, 'lon':lon, 'cid': cid['cid']}), 200
+        else:
+            return jsonify({'message': 'User not found.'}), 404
     except ValueError as e:
         return jsonify({'message': str(e)}), 400
 
