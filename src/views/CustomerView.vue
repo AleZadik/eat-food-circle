@@ -18,10 +18,12 @@
             </div>
         </template>
     </Dialog>
-    <Menubar :model="items">
+    <Menubar>
         <template #start>
             <img alt="logo" src="https://www.primefaces.org/wp-content/uploads/2020/05/placeholder.png" height="40"
                 class="mr-2">
+            <InputText v-model="newAddress" placeholder="Set your address:" type="text" />
+            <Button label="Set" class="p-button-success" @click="changeLatLon()"/>
         </template>
         <template #end>
             <InputText placeholder="Search" type="text" />
@@ -69,14 +71,27 @@ export default {
         return {
             gmap: {},
             establishmentMarkers: [],
+            activeCircles: [],
             display: false,
             clickedEstablishment: {},
             total: 0,
             currOrder: {items: []},
+            newAddress: ""
         }
     },
     mounted() {
         loader.load().then((google) => this.initializeMap(google));
+        setInterval(() => {
+            this.activeCircles.forEach(circle => {
+                let seconds = Math.floor(Date.now() / 1000);
+                let max_time = circle.max_ts;
+                let diff = Math.floor(max_time - seconds);
+                if (diff <= 0){
+                    circle.circle.setMap(null);
+                    this.activeCircles.splice(this.activeCircles.indexOf(circle), 1);
+                }
+            });
+        }, 1000);
     },
     methods: {
         getEstabs() {
@@ -128,7 +143,7 @@ export default {
                 fillOpacity: 0.35,
                 map: this.gmap,
                 center: { lat: this.authStore.user.lat, lng: this.authStore.user.lon },
-                radius: 500
+                radius: 1600
             });
 
             var count = 0;
@@ -149,10 +164,13 @@ export default {
             this.currOrder.eid = this.clickedEstablishment.eid;
             this.currOrder.lat = this.authStore.user.lat;
             this.currOrder.lon = this.authStore.user.lon;
+            this.currOrder.cid = this.authStore.user.cid;
             this.currOrder.status = "Pending";
-            this.establishmentStore.submitOrder(this.currOrder);
+            this.establishmentStore.submitOrder(this.currOrder, this.clickedEstablishment);
             this.display = false;
-            this.getEstabs();
+        },
+        changeLatLon(){
+            this.authStore.updateUserByAddress(this.newAddress);
         }
     },
     watch: {
@@ -205,15 +223,53 @@ export default {
                         this.establishmentMarkers.push({ eid: eid, marker: marker });
                     }
                 });
+
+                this.establishmentStore.circles.forEach(circle => {
+                    let lat = circle.lat;
+                    let lng = circle.lon;
+                    let radius = 1600;
+                    let latlng = new google.maps.LatLng(lat, lng);
+                    let circleObj = this.activeCircles.find(obj => obj.lat === lat && obj.lon === lng);
+                    if (circleObj) {
+                        circleObj.circle.setRadius(radius);
+                    }
+                    else {
+                        // Green circles represent the area of the 'promotion'
+                        let circleg = new google.maps.Circle({
+                            strokeColor: '#00FF00',
+                            strokeOpacity: 0.8,
+                            strokeWeight: 2,
+                            fillColor: '#00FF00',
+                            fillOpacity: 0.35,
+                            map: this.gmap,
+                            center: latlng,
+                            radius: radius
+                        });
+                        circleg.addListener("click", () => {
+                            alert("Lat: " + lat + " Lon: " + lng);
+                        });
+                        this.activeCircles.push({ lat: lat, lon: lng, circle: circleg, max_ts: circle.max_ts });
+                    }
+                });
             },
             deep: true
         },
         clickedEstablishment: {
             handler: function () {
-                this.display = true;
+                if (this.clickedEstablishment && this.clickedEstablishment.eid) {
+                    this.display = true;
+                }
             },
             deep: true
-        }
+        },
+        display: {
+            handler: function () {
+                if (!this.display) {
+                    this.clickedEstablishment = null;
+                }
+            },
+            deep: true
+        },
     }
 };
 </script>
