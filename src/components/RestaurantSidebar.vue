@@ -83,10 +83,13 @@ export default {
         // For each establishment, make establishment.timer decrease by 1 every second if they differ from 900
         setInterval(() => {
             this.allEstablishments.forEach(establishment => {
-                if (establishment.timer && establishment.timer > 0 && establishment.timer != 900) {
-                    establishment.timer -= 1;
-                }
-                else if (establishment.timer && establishment.timer <= 0) {
+                let seconds = Math.floor(Date.now() / 1000);
+                let max_time = establishment.max_ts;
+                let diff = Math.floor(max_time - seconds);
+                if (diff > 0) {
+                    establishment.timer = diff;
+                } else {
+                    establishment.popmeter = 0;
                     establishment.timer = 900;
                 }
             });
