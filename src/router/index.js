@@ -24,7 +24,11 @@ const router = createRouter({
       component: CustomerView,
       beforeEnter: (to, from, next) => {
         const authStore = useAuthStore();
+        const user = JSON.parse(sessionStorage.getItem('user'));
         if (authStore.user.u_type && authStore.user.u_type === "customer") {
+          next();
+        } else if (user && user.uid && user.u_type === "customer"){
+          authStore.user = user;
           next();
         } else if (authStore.user.u_type && authStore.user.u_type === "establishment") {
           next('/establishment');
