@@ -26,6 +26,7 @@ import Chip from 'primevue/chip';
 import Chips from 'primevue/chips';
 import DataView from 'primevue/dataview';
 import Panel from 'primevue/panel';
+import Slider from 'primevue/slider';
 // import primevue css
 
 import 'primevue/resources/themes/vela-green/theme.css';
@@ -66,5 +67,6 @@ app.component('Chip', Chip);
 app.component('Chips', Chips);
 app.component('DataView', DataView);
 app.component('Panel', Panel);
+app.component('Slider', Slider);
 
 app.mount('#app')
