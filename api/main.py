@@ -840,5 +840,28 @@ def update_user_by_address_route():
     except ValueError as e:
         return jsonify({'message': str(e)}), 400
 
+@app.route('/estab-orders', methods=['POST'])
+@cross_origin()
+def estab_orders_route():
+    try:
+        eid = request.get_json().get('eid')
+        orders = get_orders_by_establishment(eid)
+        orders.sort(key=lambda x: (x['ts_group'], x['created_at']))
+        circle_gps = {}
+        tsg = set()
+        i = 0
+        for order in orders:
+            if order['ts_group'] not in tsg:
+                tsg.add(order['ts_group'])
+                i += 1
+                circle_gps[str(i)] = {'orders': [], 'total': 0}
+            circle_gps[str(i)]['orders'].append(order)
+            circle_gps[str(i)]['total'] += order['total']
+        circle_gps['first_ts'] = orders[0]['ts_group']
+        circle_gps['last_ts'] = orders[-1]['ts_group']
+        return jsonify(circle_gps), 200
+    except ValueError as e:
+        return jsonify({'message': str(e)}), 400
+
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8080, debug=True)
