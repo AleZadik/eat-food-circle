@@ -840,7 +840,7 @@ def update_user_by_address_route():
     except ValueError as e:
         return jsonify({'message': str(e)}), 400
 
-@app.route('/estab-orders', methods=['POST'])
+@app.route('/get-estab-orders', methods=['POST'])
 @cross_origin()
 def estab_orders_route():
     try:
