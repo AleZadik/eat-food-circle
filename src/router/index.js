@@ -3,6 +3,8 @@ import ComponentViews from '../views/ComponentViews.vue'
 import LoginView from '../views/LoginView.vue'
 import CustomerView from '../views/CustomerView.vue'
 import EstablishmentView from '../views/EstablishmentView.vue'
+import DashboardView from '../views/DashboardView.vue'
+import TimelineView from '../views/TimelineView.vue'
 import { useAuthStore } from '../stores/authStore'
 
 const router = createRouter({
@@ -41,6 +43,38 @@ const router = createRouter({
       path: '/establishment',
       name: 'establishment',
       component: EstablishmentView,
+      beforeEnter: (to, from, next) => {
+        const authStore = useAuthStore();
+        if (authStore.user.u_type && authStore.user.u_type === "establishment") {
+          next();
+        } else if (authStore.user.u_type && authStore.user.u_type === "customer") {
+          next('/customer');
+        }
+        else {
+          next('/');
+        }
+      }
+    },
+    {
+      path: '/dashboard',
+      name: 'dashboard',
+      component: DashboardView,
+      beforeEnter: (to, from, next) => {
+        const authStore = useAuthStore();
+        if (authStore.user.u_type && authStore.user.u_type === "establishment") {
+          next();
+        } else if (authStore.user.u_type && authStore.user.u_type === "customer") {
+          next('/customer');
+        }
+        else {
+          next('/');
+        }
+      }
+    },
+    {
+      path: '/timeline',
+      name: 'timeline',
+      component: TimelineView,
       beforeEnter: (to, from, next) => {
         const authStore = useAuthStore();
         if (authStore.user.u_type && authStore.user.u_type === "establishment") {
