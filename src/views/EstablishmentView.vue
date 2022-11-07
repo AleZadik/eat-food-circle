@@ -1,28 +1,9 @@
 <template>
     <div class="container">
         <div class="row">
-            <Sidebar class="pct15" v-model:visible="visibleLeft" :dismissable="false" :modal="false"
-                :showCloseIcon="false">
-                <template #header>
-                    <div class="p-d-flex p-flex-row p-ai-center p-mt-4">
-                        <h1 class="title"><img src="../assets/logo.svg" alt="logo" class="logo" />FoodCircle</h1>
-                    </div>
-                </template>
-                <div class="p-d-flex p-flex-column p-ai-center p-mt-4">
-                    <div class="p-d-flex p-flex-column p-ai-center p-mt-4">
-                        <div class="item">
-                            <div class="option" @click="test"><span>Establishment</span></div>
-                        </div>
-                        <div class="item">
-                            <div class="option"><span>Dashboard</span></div>
-                        </div>
-                        <div class="item">
-                            <div class="option"><span>Timeline</span></div>
-                        </div>
-                    </div>
-                </div>
-            </Sidebar>
-            <div class="pct15"></div>
+            <EstablishmentSidebar></EstablishmentSidebar>
+            <div class="pct15">
+            </div>
             <div class="pct85">
                 <Menubar :model="items" class="fullwidth-sidebar">
                     <template #start>
@@ -133,9 +114,13 @@
 <script>
 import { useEstablishmentStore } from '../stores/establishmentStore'
 import { useAuthStore } from '../stores/authStore'
+import EstablishmentSidebar from '../components/EstablishmentSidebar.vue'
 
 export default {
     name: 'EstablishmentView',
+    components: {
+        EstablishmentSidebar,
+    },
     setup() {
         const authStore = useAuthStore()
         const establishmentStore = useEstablishmentStore()
