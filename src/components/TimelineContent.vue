@@ -2,7 +2,8 @@
     <div class="w-full ml-5 mr-5 mt-5">
         <h1 class="mt-0 text-white">{{ this.establishmentStore.establishment.name }} Timeline</h1>
         <div class="card-container">
-            <Slider v-model="ts" :range="true" :step="0.5" style="border:10px solid black;" />
+            <Slider :min="this.establishmentStore.orders.first_ts" :max="this.establishmentStore.orders.last_ts"
+                v-model="ts" :range="true" :step="1" style="border:10px solid black;" />
         </div>
         <div class="flex flex-row mt-1">
             <Button class="p-button-rounded p-button-text" icon="pi pi-play" @click="play" />
@@ -37,6 +38,9 @@ export default {
         return {
             gmap: {},
             ts: [0, 0],
+            tm: null,
+            filtered: {},
+            circles: [],
         }
     },
     mounted() {
@@ -46,6 +50,7 @@ export default {
         getEstablishment() {
             if (this.authStore.user.uid) {
                 this.establishmentStore.getEstablishmentByUID(this.authStore.user.uid);
+                this.establishmentStore.getEstablishmentOrders(this.establishmentStore.establishment.eid);
             }
         },
         initializeMap(google) {
@@ -76,7 +81,7 @@ export default {
                 content: this.establishmentStore.establishment.name
             });
 
-            infoWindow.open(this.gmap, marker);
+            //  infoWindow.open(this.gmap, marker);
             marker.addListener('click', () => {
                 infoWindow.open(this.gmap, marker);
             });
@@ -102,32 +107,93 @@ export default {
             marker.setMap(this.gmap);
         },
         play() {
-            let circle = new google.maps.Circle({
-                strokeColor: '#FF0000',
-                strokeOpacity: 0.8,
-                strokeWeight: 2,
-                fillColor: '#FF0000',
-                fillOpacity: 0.35,
-                map: this.gmap,
-                center: { lat: this.establishmentStore.establishment.lat, lng: this.establishmentStore.establishment.lon },
-                radius: 1000
-            });
-
-            let direction = 1;
-            let rMin = 800, rMax = 1600;
-            let count = 0
-            setInterval(function () {
-                count = (count + 1) % 360;
-                circle.set('fillColor', 'hsl(' + count + ', 100%, 50%)');
-                circle.set('strokeColor', 'hsl(' + count + ', 100%, 50%)');
-                let radius = circle.getRadius();
-                if ((radius > rMax) || (radius < rMin)) {
-                    direction *= -1;
+            if (this.tm) {
+                clearInterval(this.tm);
+            }
+            if (this.ts[0] == 0 || this.ts[1] == 0) {
+                this.ts[0] = this.establishmentStore.orders.first_ts;
+                this.ts[1] = this.establishmentStore.orders.first_ts;
+            }
+            let inc = this.establishmentStore.orders.last_ts - this.establishmentStore.orders.first_ts;
+            inc = inc / 100;
+            this.tm = setInterval(() => {
+                this.establishmentStore.getOrdersBetweenFirstAndLastTs(this.ts[0], this.ts[1]);
+                if (this.ts[1] < this.establishmentStore.orders.last_ts) {
+                    this.ts[1] += inc;
+                } else {
+                    clearInterval(this.tm);
+                    this.ts[1] = this.establishmentStore.orders.last_ts;
                 }
-                circle.setRadius(radius + direction * 20);
-            }, 50);
+            }, 1000);
+        },
+        pause() {
+            clearInterval(this.tm);
+        },
+        reset() {
+            this.circles.forEach(c => {
+                c.setMap(null);
+            });
+            this.circles = [];
+            this.ts = [this.establishmentStore.orders.first_ts, this.establishmentStore.orders.first_ts];
+        },
+        speedUp() {
+            let inc = this.establishmentStore.orders.last_ts - this.establishmentStore.orders.first_ts;
+            inc = inc / 100;
+            clearInterval(this.tm);
+            this.tm = setInterval(() => {
+                this.establishmentStore.getOrdersBetweenFirstAndLastTs(this.ts[0], this.ts[1]);
+                if (this.ts[1] + inc < this.establishmentStore.orders.last_ts) {
+                    this.ts[1] += inc;
+                } else {
+                    clearInterval(this.tm);
+                    this.ts[1] = this.establishmentStore.orders.last_ts;
+                }
+            }, 500);
         },
     },
+    watch: {
+        establishmentStore: {
+            handler() {
+                this.filtered = this.establishmentStore.filtered_orders;
+                for (let j = 0; j < Object.keys(this.filtered).length; j++) {
+                    let orders = this.filtered['' + j]?.orders;
+                    if (!orders || !orders.length) continue;
+                    for (let i = 0; i < 1; i++) {
+                        let order = orders[i];
+                        // if this order has already been added to the map, then don't add it again...
+                        if (this.circles.find(c => c.oid == order.oid)) {
+                            continue;
+                        }
+                        let circle = new google.maps.Circle({
+                            strokeColor: '#FF0000',
+                            strokeOpacity: 0.6,
+                            strokeWeight: 2,
+                            fillColor: '#00FF00',
+                            fillOpacity: 0.15,
+                            map: this.gmap,
+                            center: { lat: order.lat, lng: order.lon },
+                            radius: 1600
+                        });
+                        circle.oid = order.oid;
+
+                        let infowindow = new google.maps.InfoWindow({
+                            content: "<span style='color:white;'>Total: $" + this.filtered['' + j].total + "</span>",
+                        });
+
+                        circle.addListener('click', function () {
+                            infowindow.setPosition(circle.center)
+                            infowindow.open(this.gmap, circle);
+                        });
+
+                        google.maps.event.trigger(circle, 'click'); // it works! 
+                        circle.setMap(this.gmap);
+                        this.circles.push(circle);
+                    }
+                }
+            },
+            deep: true
+        }
+    }
 }
 </script>
 
@@ -155,4 +221,12 @@ export default {
 .p-slider {
     background: #17212F !important;
 }
+
+.gm-style .gm-style-iw-d::-webkit-scrollbar-track, 
+.gm-style .gm-style-iw-d::-webkit-scrollbar-track-piece,
+.gm-style .gm-style-iw-c,
+.gm-style .gm-style-iw-t::after { 
+  background: rgb(18, 0, 42);
+}
+.gm-style .gm-style-iw-tc::after {   background: rgb(18, 0, 42) }
 </style>
