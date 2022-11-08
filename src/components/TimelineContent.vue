@@ -23,7 +23,7 @@ import { useAuthStore } from '../stores/authStore'
 import { API_KEY } from "../views/API_KEY";
 import { Loader } from "google-maps";
 const loader = new Loader(API_KEY);
-
+var markers = [];
 export default {
     name: 'TimelineContent',
     setup() {
@@ -130,10 +130,14 @@ export default {
             clearInterval(this.tm);
         },
         reset() {
+            markers.forEach(m => {
+                m.setMap(null);
+            });
             this.circles.forEach(c => {
                 c.setMap(null);
             });
             this.circles = [];
+            markers = [];
             this.ts = [this.establishmentStore.orders.first_ts, this.establishmentStore.orders.first_ts];
         },
         speedUp() {
@@ -158,12 +162,24 @@ export default {
                 for (let j = 0; j < Object.keys(this.filtered).length; j++) {
                     let orders = this.filtered['' + j]?.orders;
                     if (!orders || !orders.length) continue;
-                    for (let i = 0; i < 1; i++) {
+                    for (let i = 0; i < orders.length; i++) {
                         let order = orders[i];
+                        // add a marker for each order, if it doesn't exist
+                        if (markers.find(m => m.oid == order.oid)) continue;
+                        if (markers.find(m => m.lat == order.lat && m.lon == order.lon)) continue;
+
+                        const gMarker = new google.maps.Marker({
+                            map: this.gmap,
+                            position: { lat: order.lat, lng: order.lon },
+                            title: 'Order ' + order.oid,
+                        });
+                        gMarker.oid = order.oid;
+                        gMarker.lat = order.lat;
+                        gMarker.lon = order.lon;
+                        markers.push(gMarker);
+
                         // if this order has already been added to the map, then don't add it again...
-                        if (this.circles.find(c => c.oid == order.oid)) {
-                            continue;
-                        }
+                        if (this.circles.find(c => c.oid == j)) continue;
                         let circle = new google.maps.Circle({
                             strokeColor: '#FF0000',
                             strokeOpacity: 0.6,
@@ -174,7 +190,7 @@ export default {
                             center: { lat: order.lat, lng: order.lon },
                             radius: 1600
                         });
-                        circle.oid = order.oid;
+                        circle.oid = j;
 
                         let infowindow = new google.maps.InfoWindow({
                             content: "<span style='color:white;'>Total: $" + this.filtered['' + j].total + "</span>",
