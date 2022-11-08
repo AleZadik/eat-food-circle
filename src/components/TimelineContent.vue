@@ -9,9 +9,17 @@
             <Button class="p-button-rounded p-button-text" icon="pi pi-play" @click="play" />
             <Button class="p-button-rounded p-button-text" icon="pi pi-pause" @click="pause" />
             <Button class="p-button-rounded p-button-text" icon="pi pi-refresh" @click="reset" />
-            <Button class="p-button-rounded p-button-text" icon="pi pi-angle-double-right" @click="speedUp" />
+            <Button class="p-button-rounded p-button-text" icon="pi pi-angle-double-right" @click="speedUp"/>
         </div>
+        
         <div class="map-holder mt-3" style="width:100%;height: 700px;">
+            <h4 style="color:white;" v-if="ts[0] != 0 && ts[1] != 0 && ts[0] != ts[1]">
+                Start:  {{ ts[0] != 0 ? secondsToDate(ts[0]) : 'No data' }} <br>
+                End: {{ ts[1] != 0 ? secondsToDate(ts[1]) : 'No data' }} <br>
+                Revenue: ${{ this.totalRevenue }} <br>
+                Orders: {{ this.totalOrders }} <br>
+                Circles: {{ this.totalCircles }} <br>
+            </h4>
             <div class="map" id="map" style="border:10px solid black;"></div>
         </div>
     </div>
@@ -24,6 +32,7 @@ import { API_KEY } from "../views/API_KEY";
 import { Loader } from "google-maps";
 const loader = new Loader(API_KEY);
 var markers = [];
+var circles = [];
 export default {
     name: 'TimelineContent',
     setup() {
@@ -40,7 +49,11 @@ export default {
             ts: [0, 0],
             tm: null,
             filtered: {},
-            circles: [],
+            speed: 2,
+            playing : false,
+            totalRevenue: 0,
+            totalOrders: 0,
+            totalCircles: 0,
         }
     },
     mounted() {
@@ -113,46 +126,64 @@ export default {
             if (this.ts[0] == 0 || this.ts[1] == 0) {
                 this.ts[0] = this.establishmentStore.orders.first_ts;
                 this.ts[1] = this.establishmentStore.orders.first_ts;
+                this.playing = true;
             }
             let inc = this.establishmentStore.orders.last_ts - this.establishmentStore.orders.first_ts;
             inc = inc / 100;
             this.tm = setInterval(() => {
+                this.playing = true;
                 this.establishmentStore.getOrdersBetweenFirstAndLastTs(this.ts[0], this.ts[1]);
                 if (this.ts[1] < this.establishmentStore.orders.last_ts) {
                     this.ts[1] += inc;
                 } else {
                     clearInterval(this.tm);
                     this.ts[1] = this.establishmentStore.orders.last_ts;
+                    this.playing = false;
                 }
             }, 1000);
         },
         pause() {
             clearInterval(this.tm);
+            this.playing = false;
         },
-        reset() {
+        resetControl(){
             markers.forEach(m => {
                 m.setMap(null);
             });
-            this.circles.forEach(c => {
+            circles.forEach(c => {
                 c.setMap(null);
             });
-            this.circles = [];
+            circles = [];
             markers = [];
+            this.totalRevenue = 0;
+            this.totalOrders = 0;
+            this.totalCircles = 0;
+        },
+        reset() {
+            this.resetControl();
             this.ts = [this.establishmentStore.orders.first_ts, this.establishmentStore.orders.first_ts];
+            this.playing = false;
         },
         speedUp() {
             let inc = this.establishmentStore.orders.last_ts - this.establishmentStore.orders.first_ts;
             inc = inc / 100;
             clearInterval(this.tm);
             this.tm = setInterval(() => {
+                this.playing = true;
                 this.establishmentStore.getOrdersBetweenFirstAndLastTs(this.ts[0], this.ts[1]);
                 if (this.ts[1] + inc < this.establishmentStore.orders.last_ts) {
                     this.ts[1] += inc;
                 } else {
                     clearInterval(this.tm);
                     this.ts[1] = this.establishmentStore.orders.last_ts;
+                    this.playing = false;
                 }
             }, 500);
+        },
+        secondsToDate(seconds) {
+            var date = new Date(0);
+            date.setUTCSeconds(seconds);
+            return date.toLocaleString();
         },
     },
     watch: {
@@ -166,7 +197,7 @@ export default {
                         let order = orders[i];
                         // add a marker for each order, if it doesn't exist
                         if (markers.find(m => m.oid == order.oid)) continue;
-                        if (markers.find(m => m.lat == order.lat && m.lon == order.lon)) continue;
+                        // if (markers.find(m => m.lat == order.lat && m.lon == order.lon)) continue;
 
                         const gMarker = new google.maps.Marker({
                             map: this.gmap,
@@ -177,9 +208,8 @@ export default {
                         gMarker.lat = order.lat;
                         gMarker.lon = order.lon;
                         markers.push(gMarker);
-
                         // if this order has already been added to the map, then don't add it again...
-                        if (this.circles.find(c => c.oid == j)) continue;
+                        if (circles.find(c => c.oid == j)) continue;
                         let circle = new google.maps.Circle({
                             strokeColor: '#FF0000',
                             strokeOpacity: 0.6,
@@ -193,9 +223,12 @@ export default {
                         circle.oid = j;
 
                         let infowindow = new google.maps.InfoWindow({
-                            content: "<span style='color:white;'>Total: $" + this.filtered['' + j].total + "</span>",
+                            content: "<span style='color:white;'>Total: $" + this.filtered['' + j].total + "<br/>Orders: "+orders.length+"</span>",
                         });
-
+                        this.totalRevenue += this.filtered['' + j].total;
+                        this.totalRevenue = Math.round(this.totalRevenue * 100) / 100;
+                        this.totalCircles += 1;
+                        this.totalOrders += orders.length;
                         circle.addListener('click', function () {
                             infowindow.setPosition(circle.center)
                             infowindow.open(this.gmap, circle);
@@ -203,9 +236,17 @@ export default {
 
                         google.maps.event.trigger(circle, 'click'); // it works! 
                         circle.setMap(this.gmap);
-                        this.circles.push(circle);
+                        circles.push(circle);
                     }
                 }
+            },
+            deep: true
+        },
+        ts: {
+            handler() {
+                if(this.playing) return;
+                this.resetControl();
+                this.establishmentStore.getOrdersBetweenFirstAndLastTs(this.ts[0], this.ts[1]);
             },
             deep: true
         }
@@ -245,4 +286,8 @@ export default {
   background: rgb(18, 0, 42);
 }
 .gm-style .gm-style-iw-tc::after {   background: rgb(18, 0, 42) }
+
+.gm-ui-hover-effect>span {
+    background: rgb(255, 255, 255) !important;
+}
 </style>
