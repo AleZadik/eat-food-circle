@@ -14,8 +14,8 @@
                         <InputText placeholder="Search" type="text" />
                     </template>
                 </Menubar>
-                <div id="content" style="background-color:#17212f;">
-                    <!-- Todo: Sales Data from the Establishment -->
+                <div id="dash-content" style="background-color:#17212f;">
+                    <SalesContent/>
                 </div>
             </div>
         </div>
@@ -26,11 +26,13 @@
 import { useEstablishmentStore } from '../stores/establishmentStore'
 import { useAuthStore } from '../stores/authStore'
 import EstablishmentSidebar from '../components/EstablishmentSidebar.vue'
+import SalesContent from '../components/SalesContent.vue'
 
 export default {
     name: 'DashboardView',
     components: {
         EstablishmentSidebar,
+        SalesContent
     },
     setup() {
         const authStore = useAuthStore()
@@ -54,3 +56,8 @@ export default {
     }
 }
 </script>
+<style scoped>
+#dash-content {
+    height: 100vh;
+}
+</style>
