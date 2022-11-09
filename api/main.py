@@ -808,7 +808,7 @@ def create_order_route():
         lat, lon = float(order.get('lat')), float(order.get('lon'))
         cid = lat_lon_to_city_name(lat, lon).lower()
         total = calculate_order_total(items, eid)
-
+        total = round(total, 2)
         valid_orders = query_for_circle_ts_eid(eid)
         current_ts = time.time()
         for order in valid_orders:
@@ -850,6 +850,7 @@ def estab_orders_route():
         circle_gps = {}
         tsg = set()
         i = 0
+        overall_total = 0
         for order in orders:
             if order['ts_group'] not in tsg:
                 tsg.add(order['ts_group'])
@@ -857,8 +858,10 @@ def estab_orders_route():
                 circle_gps[str(i)] = {'orders': [], 'total': 0}
             circle_gps[str(i)]['orders'].append(order)
             circle_gps[str(i)]['total'] += order['total']
-        circle_gps['first_ts'] = orders[0]['ts_group']
-        circle_gps['last_ts'] = orders[-1]['ts_group']
+            overall_total += order['total']
+        circle_gps['first_ts'] = orders[0]['ts_group'] - 5 # 5 seconds before first order
+        circle_gps['last_ts'] = orders[-1]['ts_group'] + 910 # 10 seconds after last order expires bug-fix
+        circle_gps['overall_total'] = overall_total
         return jsonify(circle_gps), 200
     except ValueError as e:
         return jsonify({'message': str(e)}), 400
