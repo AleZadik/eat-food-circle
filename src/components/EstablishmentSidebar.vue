@@ -39,5 +39,6 @@ export default {
 <style scoped>
 .option{
     cursor: pointer;
+    color: whitesmoke;
 }
 </style>

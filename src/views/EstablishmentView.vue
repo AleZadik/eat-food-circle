@@ -218,6 +218,10 @@ export default {
     padding: 0 !important;
 }
 
+.p-sidebar {
+    background: #17212f !important;
+    border: none !important;
+}
 .item {
     font-size: 1.2rem;
     color: #000;
