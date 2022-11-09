@@ -25,7 +25,7 @@
 									buttonLayout="horizontal" :step="1" decrementButtonClass="m-0 p-button-danger"
 									incrementButtonClass="m-0 p-button-success" incrementButtonIcon="pi pi-plus"
 									decrementButtonIcon="pi pi-minus"
-									min="0" default="0"
+									:min="0" :default="0"
 								/>
 							</div>
 							<!-- <Button icon="pi pi-shopping-cart" label="Add to Cart"

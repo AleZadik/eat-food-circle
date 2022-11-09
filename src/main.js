@@ -31,6 +31,7 @@ import Skeleton from 'primevue/skeleton';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Tooltip from 'primevue/tooltip';
+import FoodCircleOverlay from './components/FoodCircleOverlay.vue';
 // import primevue css
 
 import 'primevue/resources/themes/vela-green/theme.css';
@@ -75,6 +76,7 @@ app.component('Slider', Slider);
 app.component('Skeleton', Skeleton);
 app.component('DataTable', DataTable);
 app.component('Column', Column);
+app.component('FoodCircleOverlay', FoodCircleOverlay);
 
 app.directive('tooltip', Tooltip);
 app.mount('#app')

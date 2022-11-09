@@ -1,4 +1,5 @@
 <template>
+    <FoodCircleOverlay :show="this.establishmentStore.loading || this.authStore.loading" :loadingMsg="this.establishmentStore.loadingMsg"/>
     <Dialog v-model:visible="display" :modal="true">
         <template #header>
             <h3>Order from {{ clickedEstablishment.name }}</h3>
@@ -37,7 +38,7 @@
                 </RestaurantSidebar>
             </div>
             <div class="col-9">
-                <div id="map"></div>
+                <div id="map" class="border-left-3"></div>
             </div>
         </div>
     </div>
@@ -301,7 +302,6 @@ export default {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background-color: lightseagreen;
 }
 
 .col-9 {
@@ -311,13 +311,15 @@ export default {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background-color: rgb(113, 150, 148);
+    padding: 0% !important;
 }
 
 .p-menubar {
     width: 100%;
     height: 10vh;
     display: flex;
+    border: none !important;
+    border-radius: 0 !important;
 }
 
 .mr-2 {
