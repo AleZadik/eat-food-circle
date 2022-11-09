@@ -55,10 +55,17 @@
                             <li class="flex align-items-center py-3 px-2 border-top-1 surface-border flex-wrap">
                                 <div class="text-500 w-6 md:w-2 font-medium">Establishment Menu</div>
                                 <div class="text-900 w-full md:w-8 md:flex-order-0 flex-order-1 clickable">
-                                    <!-- check icon -->
                                     <i class="pi pi-check"></i>
-                                    <!-- x icon -->
                                     <i class="pi pi-times"></i>
+                                </div>
+                                <div class="w-6 md:w-2 flex justify-content-end">
+                                    <Button label="Edit" icon="pi pi-pencil" class="p-button-text"></Button>
+                                </div>
+                            </li>
+                            <li class="flex align-items-center py-3 px-2 border-top-1 surface-border flex-wrap">
+                                <div class="text-500 w-6 md:w-2 font-medium">Establishment Promotions</div>
+                                <div class="text-900 w-full md:w-8 md:flex-order-0 flex-order-1 clickable">
+                                    <i class="pi pi-check"></i>
                                 </div>
                                 <div class="w-6 md:w-2 flex justify-content-end">
                                     <Button label="Edit" icon="pi pi-pencil" class="p-button-text"></Button>
