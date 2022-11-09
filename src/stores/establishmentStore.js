@@ -12,6 +12,8 @@ export const useEstablishmentStore = defineStore(
       first_ts: 0,
       last_ts: 0,
       filtered_orders: {},
+      amtOrders: 0,
+      amtCustomers: 0,
     }),
     getters: {
       getEstablishment(state) {
@@ -66,21 +68,32 @@ export const useEstablishmentStore = defineStore(
       getEstablishmentOrders(eid) {
         axios.post('http://127.0.0.1:8080/get-estab-orders', { eid: eid })
           .then((response) => {
-            this.orders = response.data;
+            this.orders = response.data; // orders is a dict { 1: {order: [], total: 0}, 2: {order: [], total: 0}, ... first_ts: 0, last_ts: 0 }
             this.first_ts = response.data.first_ts;
             this.last_ts = response.data.last_ts;
+            let amtOrders = 0;
+            let uniqueCustomers = new Set();
+            for (let key in response.data) {
+              if (key != 'first_ts' && key != 'last_ts' && key != 'overall_total') {
+                amtOrders += response.data[key].orders.length;
+                for (let order of response.data[key].orders) {
+                  if (order.uid) {
+                    uniqueCustomers.add(order.uid);
+                  }
+                }
+              }
+            }
+            this.amtOrders = amtOrders;
+            this.amtCustomers = uniqueCustomers.size;
           });
       },
       async getOrdersBetweenFirstAndLastTs(fts, lts) {
-        let len = Object.keys(this.orders).length - 2;
+        let len = Object.keys(this.orders).length - 3;
         let filtered_orders = {};
         for (let i = 1; i <= len; i++) {
           let order = this.orders["" + i].orders;
-          // console.log(order);
           for( let j = 0; j < order.length; j++) {
-            // console.log(order[j]);
-            if (order[j].created_at >= fts && order[j].created_at <= lts) {
-              // console.log("added");
+            if (order[j].created_at >= fts - 5 && order[j].created_at <= lts + 5) {
               if (!filtered_orders["" + i]) {
                 filtered_orders["" + i] = {'orders': [], 'total': 0};
               }

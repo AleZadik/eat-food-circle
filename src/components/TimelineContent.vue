@@ -1,5 +1,5 @@
 <template>
-    <div class="w-full ml-5 mr-5 mt-5">
+    <div class="floating-time w-full ml-5 mr-5 mt-5">
         <h1 class="mt-0 text-white">{{ this.establishmentStore.establishment.name }} Timeline</h1>
         <div class="card-container">
             <Slider :min="this.establishmentStore.orders.first_ts" :max="this.establishmentStore.orders.last_ts"
@@ -138,6 +138,7 @@ export default {
                 } else {
                     clearInterval(this.tm);
                     this.ts[1] = this.establishmentStore.orders.last_ts;
+                    this.establishmentStore.getOrdersBetweenFirstAndLastTs(this.ts[0], this.ts[1]);
                     this.playing = false;
                 }
             }, 1000);
@@ -176,6 +177,7 @@ export default {
                 } else {
                     clearInterval(this.tm);
                     this.ts[1] = this.establishmentStore.orders.last_ts;
+                    this.establishmentStore.getOrdersBetweenFirstAndLastTs(this.ts[0], this.ts[1]);
                     this.playing = false;
                 }
             }, 500);
@@ -185,12 +187,15 @@ export default {
             date.setUTCSeconds(seconds);
             return date.toLocaleString();
         },
+        // waitSeconds(seconds) {
+        //     return new Promise(resolve => setTimeout(resolve, seconds * 1000));
+        // },
     },
     watch: {
         establishmentStore: {
             handler() {
                 this.filtered = this.establishmentStore.filtered_orders;
-                for (let j = 0; j < Object.keys(this.filtered).length; j++) {
+                for (let j = 1; j <= Object.keys(this.filtered).length; j++) {
                     let orders = this.filtered['' + j]?.orders;
                     if (!orders || !orders.length) continue;
                     for (let i = 0; i < orders.length; i++) {
@@ -237,6 +242,7 @@ export default {
                         google.maps.event.trigger(circle, 'click'); // it works! 
                         circle.setMap(this.gmap);
                         circles.push(circle);
+                        //this.$toast.add({ severity: 'success', summary: 'New Circle!', detail: 'Order accepted', life: 1000 });
                     }
                 }
             },
@@ -289,5 +295,12 @@ export default {
 
 .gm-ui-hover-effect>span {
     background: rgb(255, 255, 255) !important;
+}
+
+.floating-time {
+    padding: 2rem;
+    box-shadow: 0px 4px 8px 7px rgb(0 0 0 / 40%);
+    border-radius: 12px;
+    background: #634e804f;
 }
 </style>
