@@ -14,6 +14,8 @@ export const useEstablishmentStore = defineStore(
       filtered_orders: {},
       amtOrders: 0,
       amtCustomers: 0,
+      loading: false,
+      loadingMsg: '',
     }),
     getters: {
       getEstablishment(state) {
@@ -25,6 +27,8 @@ export const useEstablishmentStore = defineStore(
     },
     actions: {
       updateEstablishment(uid, establishment) {
+        this.loadingMsg = 'Updating establishment...';
+        this.loading = true;
         axios.post('http://127.0.0.1:8080/update-est', {
           changes: establishment,
           eid: this.establishment.eid,
@@ -32,40 +36,55 @@ export const useEstablishmentStore = defineStore(
         })
           .then((response) => {
             this.establishment = response.data;
+            this.loading = false;
             this.$toast.add({ severity: 'success', summary: 'Success', detail: 'Establishment updated.', life: 2000 });
           });
       },
       getEstablishmentByUID(id) {
+        this.loadingMsg = 'Getting establishment details...';
+        this.loading = true;
         axios.post('http://127.0.0.1:8080/get-est', { uid: id })
           .then((response) => {
             this.establishment = response.data;
+            this.loading = false;
           })
           .catch((error) => {
             console.log(error);
           });
       },
       createEstablishment(uid, establishment) {
+        this.loadingMsg = 'Creating establishment...';
+        this.loading = true;
         axios.post('http://127.0.0.1:8080/create-est', { uid: uid, establishment: establishment })
           .then((response) => {
             this.establishment = establishment;
+            this.loading = false;
             this.$toast.add({ severity: 'success', summary: 'Success', detail: 'Establishment created.', life: 2000 });
           });
       },
       getEstablishmentsByCity(city_name, lat, lon) {
+        this.loadingMsg = 'Getting establishments...';
+        this.loading = true;
         axios.post('http://127.0.0.1:8080/get-est-by-city', { city_id: city_name, lat: lat, lon: lon })
           .then((response) => {
             this.allEstablishments = response.data.establishments;
+            this.loading = false;
             this.circles = response.data.circles;
           });
       },
       submitOrder(order) {
+        this.loadingMsg = 'Submitting order...';
+        this.loading = true;
         axios.post('http://127.0.0.1:8080/submit-order', { order: order })
           .then((response) => {
+            this.loading = false;
             this.$toast.add({ severity: 'success', summary: 'Success', detail: 'Order submitted.', life: 2000 });
             this.getEstablishmentsByCity(order.cid, order.lat, order.lon);
           });
       },
       getEstablishmentOrders(eid) {
+        this.loadingMsg = 'Getting orders...';
+        this.loading = true;
         axios.post('http://127.0.0.1:8080/get-estab-orders', { eid: eid })
           .then((response) => {
             this.orders = response.data; // orders is a dict { 1: {order: [], total: 0}, 2: {order: [], total: 0}, ... first_ts: 0, last_ts: 0 }
@@ -85,6 +104,7 @@ export const useEstablishmentStore = defineStore(
             }
             this.amtOrders = amtOrders;
             this.amtCustomers = uniqueCustomers.size;
+            this.loading = false;
           });
       },
       async getOrdersBetweenFirstAndLastTs(fts, lts) {
