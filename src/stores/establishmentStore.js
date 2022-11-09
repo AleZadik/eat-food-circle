@@ -16,6 +16,7 @@ export const useEstablishmentStore = defineStore(
       amtCustomers: 0,
       loading: false,
       loadingMsg: '',
+      loadingOrders: false,
     }),
     getters: {
       getEstablishment(state) {
@@ -85,6 +86,7 @@ export const useEstablishmentStore = defineStore(
       getEstablishmentOrders(eid) {
         this.loadingMsg = 'Getting orders...';
         this.loading = true;
+        this.loadingOrders = true;
         axios.post('http://127.0.0.1:8080/get-estab-orders', { eid: eid })
           .then((response) => {
             this.orders = response.data; // orders is a dict { 1: {order: [], total: 0}, 2: {order: [], total: 0}, ... first_ts: 0, last_ts: 0 }
@@ -105,6 +107,7 @@ export const useEstablishmentStore = defineStore(
             this.amtOrders = amtOrders;
             this.amtCustomers = uniqueCustomers.size;
             this.loading = false;
+            this.loadingOrders = false;
           });
       },
       async getOrdersBetweenFirstAndLastTs(fts, lts) {

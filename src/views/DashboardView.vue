@@ -1,5 +1,5 @@
 <template>
-    <FoodCircleOverlay :show="this.establishmentStore.loading || this.authStore.loading" :loadingMsg="this.establishmentStore.loadingMsg"/>
+    <FoodCircleOverlay :show="this.establishmentStore.loading || this.authStore.loading || this.establishmentStore.loadingOrders" :loadingMsg="this.establishmentStore.loadingMsg"/>
     <div class="container">
         <div class="row">
             <EstablishmentSidebar></EstablishmentSidebar>
