@@ -1,7 +1,7 @@
 <!-- List of Restaurants -->
 <template>
 
-    <div class="surface-card shadow-2 border-round p-4" style="width: 100%;height: 100%;">
+    <div class="surface-card shadow-2 pl-4 pt-4 pb-4 pr-2" style="width: 100%;height: 100%;">
         <div class="flex justify-content-between align-items-center" style="height: 10%;">
             <span class="text-xl text-900 font-medium">Establishments in your Area</span>
             <div>
@@ -12,14 +12,14 @@
             </div>
         </div>
         <ul class="list-none p-0 m-0" style="overflow-y:scroll;height:90%;overflow-x:hidden">
-            <li class="mb-5 cursor-pointer" v-for="establishment in allEstablishments"
+            <li class="estab mb-5 cursor-pointer" v-for="establishment in allEstablishments"
                 @click="establishmentFocus(establishment)">
                 <div class="align-items-center">
                     <div>
                         <div class="text-900 font-medium text-lg mb-2">{{ establishment.name }}</div>
                         <div class="flex align-items-center">
                             <span v-for="k in establishment.keywords"
-                                class="flex p-1 bg-green-100 text-green-600 font-medium text-sm border-round ml-0 mr-1">{{
+                                class="flex p-1 bg-green-100 text-1f2d40-600 font-medium text-sm border-round ml-0 mr-1">{{
                                         k
                                 }}</span>
                         </div>
@@ -27,7 +27,7 @@
                 </div>
                 <div class="block benefits">
                     <strong>
-                        <p class="pop-text" style="text-align:center">Popularity Meter</p>
+                        <p class="pop-text" style="text-align:center;color: #E3655B;">Popularity Meter</p>
                     </strong>
                     <div class="input-flex-container">
                         <!-- @TODO: Refactor when I get the chance to use v-for -->
@@ -48,11 +48,11 @@
                         </div>
                     </div>
                     <div class="block text-right w-full pr-4">
-                        <p class='estab-timer' v-if="establishment.timer && establishment.timer > 0">Timer: {{establishment.timer}} s</p>
+                        <p class='estab-timer' style="color:#E3655B;" v-if="establishment.timer && establishment.timer > 0">Timer: {{establishment.timer}} s</p>
                         <p v-else>Timer:  900s</p>
                     </div>
                 </div>
-                <p class='order-text m-0'>Order before the timer to receive highlighted benefits!</p>
+                <p class='order-text m-0' style="color:white">Order before the timer to receive highlighted benefits!</p>
             </li>
         </ul>
     </div>
@@ -113,7 +113,7 @@ export default {
 .input {
     width: 25px;
     height: 25px;
-    background-color: #2C3E50;
+    background-color: #5B8C5A;
     position: relative;
     border-radius: 50%;
 }
@@ -126,7 +126,7 @@ export default {
     z-index: -1;
     top: 50%;
     transform: translateY(-50%);
-    background-color: #2C3E50;
+    background-color: #5B8C5A;
     width: 2vw;
     height: 5px;
     max-width: 100px;
@@ -141,15 +141,15 @@ export default {
 }
 
 .input.active {
-    background-color: #2C3E50;
+    background-color: #5B8C5A;
 }
 
 .input.active::before {
-    background-color: #2C3E50;
+    background-color: #5B8C5A;
 }
 
 .input.active::after {
-    background-color: #AEB6BF;
+    background-color: #CFD186;
 }
 
 .input.active span {
@@ -167,7 +167,7 @@ export default {
 .input.active~.input,
 .input.active~.input::before,
 .input.active~.input::after {
-    background-color: #AEB6BF;
+    background-color: #CFD186;
 }
 
 .input span {
@@ -178,7 +178,7 @@ export default {
     left: 50%;
     transform: translate(-50%, -50%);
     visibility: hidden;
-    color: #2C3E50;
+    color: #5B8C5A;
 }
 
 .input span::before,
@@ -202,5 +202,9 @@ export default {
     transform: translateX(-5px) rotateZ(-45deg);
     font-size: 12px;
     text-indent: -10px;
+}
+
+.estab:hover {
+    opacity: 60%;
 }
 </style>
