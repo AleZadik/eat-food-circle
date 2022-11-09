@@ -27,6 +27,10 @@ import Chips from 'primevue/chips';
 import DataView from 'primevue/dataview';
 import Panel from 'primevue/panel';
 import Slider from 'primevue/slider';
+import Skeleton from 'primevue/skeleton';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import Tooltip from 'primevue/tooltip';
 // import primevue css
 
 import 'primevue/resources/themes/vela-green/theme.css';
@@ -68,5 +72,9 @@ app.component('Chips', Chips);
 app.component('DataView', DataView);
 app.component('Panel', Panel);
 app.component('Slider', Slider);
+app.component('Skeleton', Skeleton);
+app.component('DataTable', DataTable);
+app.component('Column', Column);
 
+app.directive('tooltip', Tooltip);
 app.mount('#app')
