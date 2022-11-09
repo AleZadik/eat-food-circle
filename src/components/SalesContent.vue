@@ -37,6 +37,7 @@
         </div>
         <div class="awesome-table surface-ground px-4 py-5 mt-5">
         <DataTable :value="orders" responsiveLayout="scroll">
+            <Column field="uid" header="Customer" :sortable="true"></Column>
             <Column field="oid" header="Order ID" :sortable="true"></Column>
             <Column field="date" header="Date" :sortable="true"></Column>
             <Column field="total" header="Total" :sortable="true">
@@ -44,10 +45,21 @@
                     ${{ slotProps.data.total }}
                 </template>
             </Column>
+            <Column field="OrderString" header="Order" :sortable="true">
+                <template #body="slotProps">
+                    <!-- document icon -->
+                    <i class="pi pi-file" v-tooltip.top="slotProps.data.OrderString"></i>
+                </template>
+            </Column>
+            <Column field="amtCircleSales" header="Circle Sales" :sortable="true">
+                <template #body="slotProps">
+                    {{ slotProps.data.amtCircleSales }}
+                </template>
+            </Column>
             <Column field="circleCreator" header="Circle Creator" :sortable="true">
                 <template #body="slotProps">
                     <i class="circle-creator pi pi-map-marker text-xl text-black clickable" v-if="slotProps.data.circleCreator == 'YES'" v-tooltip="'User Created Circle'"></i>
-                    <i class="non-circle-creator pi pi-ban text-xl text-gray-300" v-else v-tooltip="'No Circles'"></i>
+                    <i class="non-circle-creator pi pi-ban text-xl text-gray-300" v-else v-tooltip="'Non Creator'"></i>
                 </template>
             </Column>
         </DataTable>
@@ -84,6 +96,21 @@ export default {
                 this.establishmentStore.getEstablishmentOrders(this.establishmentStore.establishment.eid);
             }
         },
+        getOrderString(order) {
+            let orderString = '';
+            for (let i = 1; i <= Object.keys(order.order_obj).length; i++) {
+                if (order.order_obj[i] <= 0) continue;
+                let item = this.establishmentStore.establishment.menu[i-1].name;
+                let quantity = order.order_obj[i];
+                orderString += `${quantity}x ${item}, `;
+            }
+            for( let i = 0; i < this.establishmentStore.establishment.promo.length; i++) {
+                if ( order.amtCircleSales >= i + 1) {
+                    orderString += `PROMO: ${this.establishmentStore.establishment.promo[i]}, `;
+                }
+            }
+            return orderString.slice(0, -2);
+        }
     },
     watch: {
         establishmentStore: {
@@ -94,6 +121,8 @@ export default {
                         this.establishmentStore.orders[key].orders.forEach(order => {
                             order.date = new Date(order.created_at * 1000).toLocaleString();
                             order.circleCreator = Math.abs(order.ts_group - order.created_at) <= 0.1 ? 'YES' : 'NO';
+                            order.OrderString = this.getOrderString(order);
+                            order.amtCircleSales = this.establishmentStore.orders[key].orders.length;
                             this.orders.push(order);
                         });
                     }
