@@ -7,12 +7,10 @@
             </div>
             <div class="pct85">
                 <Menubar class="fullwidth-sidebar">
-                    <template #start>
-                        <img alt="logo" src="https://www.primefaces.org/wp-content/uploads/2020/05/placeholder.png"
-                            height="40" class="mr-2">
-                    </template>
                     <template #end>
-                        <InputText placeholder="Search" type="text" />
+                        <Button icon="pi pi-home" style="width:auto;padding:12px;" onclick='window.location.href = "/"'>   
+                            Logout
+                        </Button>
                     </template>
                 </Menubar>
                 <div id="dash-content" style="background-color:#17212f;">

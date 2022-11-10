@@ -6,18 +6,16 @@
             <div class="pct15">
             </div>
             <div class="pct85">
-                <Menubar :model="items" class="fullwidth-sidebar">
-                    <template #start>
-                        <img alt="logo" src="https://www.primefaces.org/wp-content/uploads/2020/05/placeholder.png"
-                            height="40" class="mr-2">
-                    </template>
+                <Menubar class="fullwidth-sidebar">
                     <template #end>
-                        <InputText placeholder="Search" type="text" />
+                        <Button icon="pi pi-home" style="width:auto;padding:12px;" onclick='window.location.href = "/"'>   
+                            Logout
+                        </Button>
                     </template>
                 </Menubar>
                 <div id="content" style="background-color:#17212f;">
                     <!-- Setup your Establishment || Your Establishment Details -->
-                    <div class="surface-section">
+                    <div class="surface-section" style="height:fit-content;">
                         <div class="font-medium text-3xl text-900 mb-3">Your Establishment</div>
                         <div class="text-500 mb-5">Click on the text or the edit buttons to edit your establishment's
                             information. </div>
@@ -52,25 +50,6 @@
                                         @click="focusField('address')"></Button>
                                 </div>
                             </li>
-                            <li class="flex align-items-center py-3 px-2 border-top-1 surface-border flex-wrap">
-                                <div class="text-500 w-6 md:w-2 font-medium">Establishment Menu</div>
-                                <div class="text-900 w-full md:w-8 md:flex-order-0 flex-order-1 clickable">
-                                    <i class="pi pi-check"></i>
-                                    <i class="pi pi-times"></i>
-                                </div>
-                                <div class="w-6 md:w-2 flex justify-content-end">
-                                    <Button label="Edit" icon="pi pi-pencil" class="p-button-text"></Button>
-                                </div>
-                            </li>
-                            <li class="flex align-items-center py-3 px-2 border-top-1 surface-border flex-wrap">
-                                <div class="text-500 w-6 md:w-2 font-medium">Establishment Promotions</div>
-                                <div class="text-900 w-full md:w-8 md:flex-order-0 flex-order-1 clickable">
-                                    <i class="pi pi-check"></i>
-                                </div>
-                                <div class="w-6 md:w-2 flex justify-content-end">
-                                    <Button label="Edit" icon="pi pi-pencil" class="p-button-text"></Button>
-                                </div>
-                            </li>
                             <li
                                 class="flex align-items-center py-3 px-2 border-top-1 border-bottom-1 surface-border flex-wrap">
                                 <div class="text-500 w-6 md:w-2 font-medium">Description</div>
@@ -88,6 +67,24 @@
                                     <Button label="Edit" icon="pi pi-pencil" class="p-button-text"
                                         @click="focusField('description')"></Button>
 
+                                </div>
+                            </li>
+                            <li class="flex align-items-center py-3 px-2 border-top-1 surface-border flex-wrap">
+                                <div class="text-500 w-6 md:w-2 font-medium">Establishment Menu</div>
+                                <div class="text-900 w-full md:w-8 md:flex-order-0 flex-order-1">
+                                    <i class="pi pi-check"> Default Menu</i>
+                                </div>
+                                <div class="w-6 md:w-2 flex justify-content-end">
+                                    <!-- <Button label="Edit" icon="pi pi-pencil" class="p-button-text"></Button> -->
+                                </div>
+                            </li>
+                            <li class="flex align-items-center py-3 px-2 border-top-1 surface-border flex-wrap">
+                                <div class="text-500 w-6 md:w-2 font-medium">Establishment Promotions</div>
+                                <div class="text-900 w-full md:w-8 md:flex-order-0 flex-order-1">
+                                    <i class="pi pi-check"> Default Promos</i>
+                                </div>
+                                <div class="w-6 md:w-2 flex justify-content-end">
+                                    <!-- <Button label="Edit" icon="pi pi-pencil" class="p-button-text"></Button> -->
                                 </div>
                             </li>
                             <li class="flex align-items-center py-3 px-2 border-top-1 surface-border flex-wrap">

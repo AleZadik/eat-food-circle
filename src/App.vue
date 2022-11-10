@@ -7,3 +7,10 @@
 <script>
 export default {};
 </script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Mukta:wght@800&family=Poppins&family=Roboto&family=Ubuntu&display=swap');
+body{
+  font-family: 'Poppins', sans-serif;
+}
+</style>

@@ -1,9 +1,7 @@
 <template>
-    <Sidebar class="pct15" v-model:visible="visibleLeft" :dismissable="false" :modal="false" :showCloseIcon="false">
-        <template #header>
-            <div class="p-d-flex p-flex-row p-ai-center p-mt-4">
-                <h1 class="title"><img src="../assets/logo.svg" alt="logo" class="logo" />FoodCircle</h1>
-            </div>
+    <Sidebar class="pct15" v-model:visible="visibleLeft" :dismissable="false" :modal="false" :showCloseIcon="false" style="padding:0px;">
+        <template #header class="p-0">
+            <h2 style="text-shadow: rgb(0 255 81 / 80%) 0px 0px 8px;color: black;justify-content: center;text-align: center;"> Food Circle</h2>
         </template>
         <div class="p-d-flex p-flex-column p-ai-center p-mt-4">
             <div class="p-d-flex p-flex-column p-ai-center p-mt-4">
@@ -36,9 +34,18 @@ export default {
 }
 </script>
 
-<style scoped>
+<style>
 .option{
     cursor: pointer;
     color: whitesmoke;
+}
+
+.p-sidebar-header-content{
+    padding: 0px !important;
+}
+
+.p-sidebar .p-sidebar-header{
+    padding: 0px !important;
+    background-color: brown !important;
 }
 </style>

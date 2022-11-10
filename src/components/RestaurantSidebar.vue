@@ -1,6 +1,5 @@
 <!-- List of Restaurants -->
 <template>
-
     <div class="surface-card shadow-2 pl-4 pt-4 pb-4 pr-2" style="width: 100%;height: 100%;">
         <div class="flex justify-content-between align-items-center" style="height: 10%;">
             <span class="text-xl text-900 font-medium">Establishments in your Area</span>

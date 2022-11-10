@@ -1,5 +1,6 @@
 <template>
-    <FoodCircleOverlay :show="this.establishmentStore.loading || this.authStore.loading" :loadingMsg="this.establishmentStore.loadingMsg"/>
+    <FoodCircleOverlay :show="this.establishmentStore.loading || this.authStore.loading"
+        :loadingMsg="this.establishmentStore.loadingMsg" />
     <Dialog v-model:visible="display" :modal="true">
         <template #header>
             <h3>Order from {{ clickedEstablishment.name }}</h3>
@@ -14,20 +15,21 @@
                     <span class="p-text-bold" style="width:200px;">Total: {{ total }}</span>
                 </div>
                 <div class="flex justify-content-end mt-2">
-                    <Button @click="submitOrder" style="width:200px;" icon="pi pi-shopping-cart" label="Complete Purchase" class="mr-0 p-button-success width-200" />
+                    <Button @click="submitOrder" style="width:200px;" icon="pi pi-shopping-cart"
+                        label="Complete Purchase" class="mr-0 p-button-success width-200" />
                 </div>
             </div>
         </template>
     </Dialog>
     <Menubar>
-        <template #start>
-            <img alt="logo" src="https://www.primefaces.org/wp-content/uploads/2020/05/placeholder.png" height="40"
-                class="mr-2">
-            <InputText v-model="newAddress" placeholder="Set your address:" type="text" />
-            <Button label="Set" class="p-button-success" @click="changeLatLon()"/>
+        <template #start class="p-0">
+            <div style="width:25vw;text-align: center;">
+                <h1 style="text-shadow: rgb(0 255 81 / 80%) 0px 0px 8px;color: black;justify-content: center;text-align: center;"><i class="pi pi-circle" style="font-size: 1.5rem"></i> Food Circle</h1>
+            </div>
         </template>
         <template #end>
-            <InputText placeholder="Search" type="text" />
+            <InputText v-model="newAddress" placeholder="Set your address:" type="text" class='mr-3'/>
+            <Button label="Set" class="p-button-success" @click="changeLatLon()" />
         </template>
     </Menubar>
     <div class="container">
@@ -76,7 +78,7 @@ export default {
             display: false,
             clickedEstablishment: {},
             total: 0,
-            currOrder: {items: []},
+            currOrder: { items: [] },
             newAddress: ""
         }
     },
@@ -87,7 +89,7 @@ export default {
                 let seconds = Math.floor(Date.now() / 1000);
                 let max_time = circle.max_ts;
                 let diff = Math.floor(max_time - seconds);
-                if (diff <= 0){
+                if (diff <= 0) {
                     circle.circle.setMap(null);
                     this.activeCircles.splice(this.activeCircles.indexOf(circle), 1);
                 }
@@ -160,7 +162,7 @@ export default {
             this.total = orderTotal.total;
             this.currOrder.items = orderTotal.order;
         },
-        submitOrder(){
+        submitOrder() {
             this.currOrder.uid = this.authStore.user.uid;
             this.currOrder.eid = this.clickedEstablishment.eid;
             this.currOrder.lat = this.authStore.user.lat;
@@ -170,7 +172,7 @@ export default {
             this.establishmentStore.submitOrder(this.currOrder, this.clickedEstablishment);
             this.display = false;
         },
-        changeLatLon(){
+        changeLatLon() {
             this.authStore.updateUserByAddress(this.newAddress);
         }
     },
@@ -190,7 +192,7 @@ export default {
                     if (marker) {
                         marker.marker.setPosition(latlng);
                     }
-                    else{
+                    else {
                         marker = new google.maps.Marker({
                             position: latlng,
                             map: this.gmap,

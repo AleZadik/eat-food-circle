@@ -14,7 +14,8 @@
     </Dialog>
     <div class="login-wrapper">
         <div class="login-card">
-            <h1> Food Circle </h1>
+            <!-- <h1> Food Circle </h1> -->
+            <img src="../assets/fc_logo.png" alt="logo" class="logo" style="width:200px;height:200px;" />
             <div class="p-inputgroup">
                 <span class="p-inputgroup-addon">
                     <i class="pi pi-user"></i>
@@ -155,7 +156,9 @@ body {
     justify-content: center;
     align-items: center;
     width: 400px;
-    height: 400px;
+    padding-bottom: 25px;
+    padding-left: 5px;
+    padding-right: 5px;
     border: 1px solid #ccc;
     border-radius: 10px;
     background-color: #17212f;
