@@ -19,7 +19,7 @@ export const useAuthStore = defineStore(
         formData.append('email', email)
         formData.append('lat', lat)
         formData.append('lon', lon)
-        axios.post('http://127.0.0.1:8080/login', formData, {
+        axios.post('/login', formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
@@ -34,7 +34,7 @@ export const useAuthStore = defineStore(
           this.$toast.add({ severity: 'error', summary: 'Wrong Type', detail: 'User type does not exist.', life: 2000 });
           return;
         }
-        axios.post('http://127.0.0.1:8080/update-user', {
+        axios.post('/update-user', {
           changes: { u_type: type },
           uid: this.user.uid
         })
@@ -45,7 +45,7 @@ export const useAuthStore = defineStore(
           });
       },
       updateUserByAddress(address) {
-        axios.post('http://127.0.0.1:8080/update-user-by-address', {
+        axios.post('/update-user-by-address', {
           address: address,
           uid: this.user.uid,
         })

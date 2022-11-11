@@ -1,2 +1,4 @@
 firebase.json
+cred.json
 .env
+venv/

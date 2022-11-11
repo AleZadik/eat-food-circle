@@ -30,7 +30,7 @@ export const useEstablishmentStore = defineStore(
       updateEstablishment(uid, establishment) {
         this.loadingMsg = 'Updating establishment...';
         this.loading = true;
-        axios.post('http://127.0.0.1:8080/update-est', {
+        axios.post('/update-est', {
           changes: establishment,
           eid: this.establishment.eid,
           uid: uid
@@ -44,7 +44,7 @@ export const useEstablishmentStore = defineStore(
       getEstablishmentByUID(id) {
         this.loadingMsg = 'Getting establishment details...';
         this.loading = true;
-        axios.post('http://127.0.0.1:8080/get-est', { uid: id })
+        axios.post('/get-est', { uid: id })
           .then((response) => {
             this.establishment = response.data;
             this.loading = false;
@@ -56,7 +56,7 @@ export const useEstablishmentStore = defineStore(
       createEstablishment(uid, establishment) {
         this.loadingMsg = 'Creating establishment...';
         this.loading = true;
-        axios.post('http://127.0.0.1:8080/create-est', { uid: uid, establishment: establishment })
+        axios.post('/create-est', { uid: uid, establishment: establishment })
           .then((response) => {
             this.establishment = establishment;
             this.loading = false;
@@ -66,7 +66,7 @@ export const useEstablishmentStore = defineStore(
       getEstablishmentsByCity(city_name, lat, lon) {
         this.loadingMsg = 'Getting establishments...';
         this.loading = true;
-        axios.post('http://127.0.0.1:8080/get-est-by-city', { city_id: city_name, lat: lat, lon: lon })
+        axios.post('/get-est-by-city', { city_id: city_name, lat: lat, lon: lon })
           .then((response) => {
             this.allEstablishments = response.data.establishments;
             this.loading = false;
@@ -76,7 +76,7 @@ export const useEstablishmentStore = defineStore(
       submitOrder(order) {
         this.loadingMsg = 'Submitting order...';
         this.loading = true;
-        axios.post('http://127.0.0.1:8080/submit-order', { order: order })
+        axios.post('/submit-order', { order: order })
           .then((response) => {
             this.loading = false;
             this.$toast.add({ severity: 'success', summary: 'Success', detail: 'Order submitted.', life: 2000 });
@@ -87,7 +87,7 @@ export const useEstablishmentStore = defineStore(
         this.loadingMsg = 'Getting orders...';
         this.loading = true;
         this.loadingOrders = true;
-        axios.post('http://127.0.0.1:8080/get-estab-orders', { eid: eid })
+        axios.post('/get-estab-orders', { eid: eid })
           .then((response) => {
             this.orders = response.data; // orders is a dict { 1: {order: [], total: 0}, 2: {order: [], total: 0}, ... first_ts: 0, last_ts: 0 }
             this.first_ts = response.data.first_ts;

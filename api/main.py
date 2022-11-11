@@ -4,7 +4,7 @@ import string
 import random
 import json
 import requests as rq
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template, send_from_directory
 from flask_cors import CORS, cross_origin
 from dotenv import load_dotenv
 from firebase_admin import credentials, firestore, initialize_app
@@ -16,7 +16,7 @@ cred = credentials.Certificate('firebase.json')
 default_app = initialize_app(cred)
 db = firestore.client()
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='', static_folder='frontend/dist')
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
@@ -289,6 +289,33 @@ def lat_lon_to_city_name(lat, lon):
     print(location)
     try:
         return location.raw['address']['city'].lower()
+    except KeyError:
+        return None
+
+def lat_lon_to_address(lat, lon):
+    '''
+    Converts a latitude and longitude to an address
+
+    Args:
+        lat (float): The latitude to be converted
+        lon (float): The longitude to be converted
+
+    Returns:
+        str: The address
+
+    Raises:
+        ValueError: If any of the arguments are not of the correct type
+    '''
+    # if not isinstance(lat, float):
+    #     raise ValueError("latitude must be a float.")
+    # if not isinstance(lon, float):
+    #     raise ValueError("longitude must be a float.")
+    time.sleep(1)
+    geolocator = Nominatim(user_agent="foodie")
+    location = geolocator.reverse("{}, {}".format(lat, lon))
+    print(location)
+    try:
+        return location.raw['address']['road'].lower()
     except KeyError:
         return None
 
@@ -604,11 +631,13 @@ def is_within_radius(lat1, lon1, lat2, lon2, radius_in_miles):
     print("Distance: " + str(distance))
     return distance <= radius_in_miles * 1.1
 
-@app.route('/')
-@cross_origin()
-def root():
-    rand_str = address_to_lat_lon("3820 Oak Ridge Circle")
-    return jsonify({'message': 'Hello World!', 'random_string': rand_str}), 200
+@app.route("/", defaults={'path':''})
+def serve(path):
+    return send_from_directory(app.static_folder,'index.html')
+
+@app.route("/customer", defaults={'path':''})
+def serve_customer(path):
+    return send_from_directory(app.static_folder,'index.html')
 
 @app.route('/get-est', methods=['POST'])
 @cross_origin()
@@ -630,7 +659,7 @@ def create_establishment_route():
         uid = request.get_json().get('uid')
         name = est.get('name')
         # Default menu + promotion just to relax the constraints for the hackathon
-        menu_obj = est.get('menu', [{"id":1,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/src/assets/burger1.png"},{"id":2,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/src/assets/burger2.png"},{"id":3,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/src/assets/burger3.png"},{"id":4,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/src/assets/burger4.png"},{"id":5,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/src/assets/desserts1.png"},{"id":6,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/src/assets/desserts2.png"},{"id":7,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/src/assets/desserts3.png"},{"id":8,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/src/assets/salad1.png"}])
+        menu_obj = est.get('menu', [{"id":1,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/burger1.png"},{"id":2,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/burger2.png"},{"id":3,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/burger3.png"},{"id":4,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/burger4.png"},{"id":5,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/desserts1.png"},{"id":6,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/desserts2.png"},{"id":7,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/desserts3.png"},{"id":8,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/salad1.png"}])
         promo_obj = est.get('promo', ["5% OFF", "Free Beverage", "10% OFF", "Free Dessert", "Free Entree"])
         description = est.get('description')
         address = est.get('address')
@@ -651,8 +680,8 @@ def create_establishment_route():
 def update_establishment_route():
     est_id = request.get_json().get('eid')
     changes = request.get_json().get('changes')
-    #changes['promo'] = ["5% OFF", "Free Beverage", "10% OFF", "Free Dessert", "Free Entree"]
-    #changes['menu'] = [{"id":1,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/src/assets/burger1.png"},{"id":2,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/src/assets/burger2.png"},{"id":3,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/src/assets/burger3.png"},{"id":4,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/src/assets/burger4.png"},{"id":5,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/src/assets/desserts1.png"},{"id":6,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/src/assets/desserts2.png"},{"id":7,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/src/assets/desserts3.png"},{"id":8,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/src/assets/salad1.png"}]
+    changes['promo'] = ["5% OFF", "Free Beverage", "10% OFF", "Free Dessert", "Free Entree"]
+    changes['menu'] = [{"id":1,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/burger1.png"},{"id":2,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/burger2.png"},{"id":3,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/burger3.png"},{"id":4,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/burger4.png"},{"id":5,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/desserts1.png"},{"id":6,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/desserts2.png"},{"id":7,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/desserts3.png"},{"id":8,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/salad1.png"}]
     try:
         if changes.get('address'):
             lat, lon = address_to_lat_lon(changes.get('address'))
@@ -870,5 +899,29 @@ def estab_orders_route():
     except ValueError as e:
         return jsonify({'message': str(e)}), 400
 
+@app.route('/populate-db', methods=['POST'])
+@cross_origin()
+def populate_db_route():
+    # populate the database with establishments around the user
+    try:
+        uid = request.get_json().get('uid')
+        names = ["Best Kitchen", "Gourmet Foods", "Bingo"]
+        menu_obj = [{"id":1,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/burger1.png"},{"id":2,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/burger2.png"},{"id":3,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/burger3.png"},{"id":4,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/burger4.png"},{"id":5,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/desserts1.png"},{"id":6,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/desserts2.png"},{"id":7,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/desserts3.png"},{"id":8,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/salad1.png"}]
+        promo_obj = ["5% OFF", "Free Beverage", "10% OFF", "Free Dessert", "Free Entree"]
+        description = "Restaurant description"
+        keywords = ["Demo", "Restaurant", "Food"]
+        lat, lon = request.get_json().get('lat'), request.get_json().get('lon')
+        city_id = lat_lon_to_city_name(lat, lon)
+        # get address from latitude and longitude
+        address = lat_lon_to_address(lat, lon)
+        e_pic_url = ''
+        for i in range(10):
+            lat += random.uniform(-0.0200, 0.0300)
+            lon += random.uniform(-0.0200, 0.0300)
+            name = random.choice(names)
+            create_establishment(name, menu_obj, city_id, lat, lon, address, description, keywords, e_pic_url, uid, promo_obj)
+        return jsonify({'message': 'Establishments created successfully'}), 200
+    except ValueError as e:
+        return jsonify({'message': str(e)}), 400
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8080, debug=True)

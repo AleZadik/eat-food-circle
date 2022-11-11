@@ -59,6 +59,6 @@ export default {
 <style scoped>
 #content{
     padding: 40px 40px 40px 40px;
-    height: 150%;
+    height: 160%;
 }
 </style>
