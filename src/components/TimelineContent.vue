@@ -69,6 +69,7 @@ export default {
         initializeMap(google) {
             this.getEstablishment();
             var mapOptions = {
+                mapId: 'e20fb2ffa0a58fda',
                 zoom: 14,
                 center: { lat: this.establishmentStore.establishment.lat, lng: this.establishmentStore.establishment.lon },
                 zoomControl: true,

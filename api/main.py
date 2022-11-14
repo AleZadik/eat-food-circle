@@ -1,4 +1,5 @@
 import time
+import os
 import math
 import string
 import random
@@ -16,6 +17,9 @@ cred = credentials.Certificate('firebase.json')
 default_app = initialize_app(cred)
 db = firestore.client()
 
+GMAPKEY = os.getenv('GMAP')
+
+# Load Vue.js 3 build
 app = Flask(__name__, static_url_path='', static_folder='frontend/dist')
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
@@ -264,7 +268,33 @@ def get_establishment_by_uid(uid):
     ests = est_ref.where('uid', '==', uid).stream()
     return [est.to_dict() for est in ests]
 
-# TODO: Use google maps api to get the city id from the lat and lon
+# Google maps api get address from lat/lon
+def gmaps_get_address(lat, lon):
+    '''
+    Gets the address of a location from the Google Maps API
+
+    Args:
+        lat (float): The latitude of the location
+        lon (float): The longitude of the location
+
+    Returns:
+        str: The address of the location
+
+    Raises:
+        ValueError: If any of the arguments are not of the correct type
+    '''
+    # if not isinstance(lat, float):
+    #     raise ValueError("lat must be a float.")
+    # if not isinstance(lon, float):
+    #     raise ValueError("lon must be a float.")
+
+    url = "https://maps.googleapis.com/maps/api/geocode/json?latlng={},{}&key={}".format(
+        lat, lon, GMAPKEY)
+    response = rq.get(url)
+    if response.status_code != 200:
+        return None
+    return response.json()['results'][0]['formatted_address']
+
 def lat_lon_to_city_name(lat, lon):
     '''
     Converts a latitude and longitude to a city name
@@ -659,7 +689,8 @@ def create_establishment_route():
         uid = request.get_json().get('uid')
         name = est.get('name')
         # Default menu + promotion just to relax the constraints for the hackathon
-        menu_obj = est.get('menu', [{"id":1,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/burger1.png"},{"id":2,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/burger2.png"},{"id":3,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/burger3.png"},{"id":4,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/burger4.png"},{"id":5,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/desserts1.png"},{"id":6,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/desserts2.png"},{"id":7,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/desserts3.png"},{"id":8,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/salad1.png"}])
+        default_menu = [ { "id": "1", "name": "Special Halloween Burger", "price": 10.00, "description": "Includes a special 200g Beef patty with tangy BBQ sauce and smoky bacon.", "category": "Specials", "rating": 5, "image": "/assets/burger1.png", }, { "id": "2", "name": "Mega Ghost Tower Burger", "price": 8.00, "description": "Includes smoked beef brisket with a special ghost pepper sauce.", "category": "Specials", "rating": 4.5, "image": "/assets/burger2.png", }, { "id": "3", "name": "Jr. Burger", "price": 6.00, "description": "Includes a 100g beef patty topped with cheese and no sauce.", "category": "Burgers", "rating": 4.5, "image": "/assets/burger3.png", }, { "id": "4", "name": "Spooky Combo", "price": 13.00, "description": "Special Combo of Burger, Fries, drink, and a dessert.", "category": "Specials", "rating": 4.5, "image": "/assets/burger4.png", }, { "id": "5", "name": "Sushi Combo 1", "price": 15.00, "description": "Includes variety of sushi, sashimi, and special rolls.", "category": "Sushi Combos", "rating": 4.5, "image": "/assets/sushicombo1.png", }, { "id": "6", "name": "Sushi Combo 2", "price": 15.00, "description": "Fresh fish bowled with special sauce and served with rice.", "category": "Sushi Combos", "rating": 4.5, "image": "/assets/sushicombo2.png", }, { "id": "7", "name": "Sushi Combo 3", "price": 15.00, "description": "Includes variety of sushi, sashimi, and special rolls.", "category": "Sushi Combos", "rating": 4.5, "image": "/assets/sushicombo3.png", }, { "id": "8", "name": "Curry Chicken Combo", "price": 12.00, "description": "Combo of butter chicken with naan, rice, and curry. Mildly spicy.", "category": "Platters", "rating": 4.5, "image": "/assets/yummyfoods1.png", }, { "id": "9", "name": "Chicken Tikka Masala", "price": 12.00, "description": "Chicken tikka masala with naan, rice, and curry. Mildly spicy.", "category": "Platters", "rating": 4.5, "image": "/assets/yummyfoods4.png", }, { "id": "10", "name": "Ceasar Salad", "price": 8.00, "description": "Fresh romaine lettuce with ceasar dressing and croutons.", "category": "Salads", "rating": 4.5, "image": "/assets/salad1.png", }, { "id": "11", "name": "Greek Salad", "price": 8.00, "description": "Chopped romaine lettuce with feta cheese, olives, and tomatoes.", "category": "Salads", "rating": 4.5, "image": "/assets/salad2.png", }, { "id": "12", "name": "Sweetness Paradise", "price": 5.00, "description": "Includes a small pudding packed with Amarula cream and liquor.", "category": "Desserts", "rating": 4.5, "image": "/assets/dessert3.png", } ]
+        menu_obj = est.get('menu', default_menu)
         promo_obj = est.get('promo', ["5% OFF", "Free Beverage", "10% OFF", "Free Dessert", "Free Entree"])
         description = est.get('description')
         address = est.get('address')
@@ -681,7 +712,8 @@ def update_establishment_route():
     est_id = request.get_json().get('eid')
     changes = request.get_json().get('changes')
     changes['promo'] = ["5% OFF", "Free Beverage", "10% OFF", "Free Dessert", "Free Entree"]
-    changes['menu'] = [{"id":1,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/burger1.png"},{"id":2,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/burger2.png"},{"id":3,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/burger3.png"},{"id":4,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/burger4.png"},{"id":5,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/desserts1.png"},{"id":6,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/desserts2.png"},{"id":7,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/desserts3.png"},{"id":8,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/salad1.png"}]
+    default_menu = [ { "id": "1", "name": "Special Halloween Burger", "price": 10.00, "description": "Includes a special 200g Beef patty with tangy BBQ sauce and smoky bacon.", "category": "Specials", "rating": 5, "image": "/assets/burger1.png", }, { "id": "2", "name": "Mega Ghost Tower Burger", "price": 8.00, "description": "Includes smoked beef brisket with a special ghost pepper sauce.", "category": "Specials", "rating": 4.5, "image": "/assets/burger2.png", }, { "id": "3", "name": "Jr. Burger", "price": 6.00, "description": "Includes a 100g beef patty topped with cheese and no sauce.", "category": "Burgers", "rating": 4.5, "image": "/assets/burger3.png", }, { "id": "4", "name": "Spooky Combo", "price": 13.00, "description": "Special Combo of Burger, Fries, drink, and a dessert.", "category": "Specials", "rating": 4.5, "image": "/assets/burger4.png", }, { "id": "5", "name": "Sushi Combo 1", "price": 15.00, "description": "Includes variety of sushi, sashimi, and special rolls.", "category": "Sushi Combos", "rating": 4.5, "image": "/assets/sushicombo1.png", }, { "id": "6", "name": "Sushi Combo 2", "price": 15.00, "description": "Fresh fish bowled with special sauce and served with rice.", "category": "Sushi Combos", "rating": 4.5, "image": "/assets/sushicombo2.png", }, { "id": "7", "name": "Sushi Combo 3", "price": 15.00, "description": "Includes variety of sushi, sashimi, and special rolls.", "category": "Sushi Combos", "rating": 4.5, "image": "/assets/sushicombo3.png", }, { "id": "8", "name": "Curry Chicken Combo", "price": 12.00, "description": "Combo of butter chicken with naan, rice, and curry. Mildly spicy.", "category": "Platters", "rating": 4.5, "image": "/assets/yummyfoods1.png", }, { "id": "9", "name": "Chicken Tikka Masala", "price": 12.00, "description": "Chicken tikka masala with naan, rice, and curry. Mildly spicy.", "category": "Platters", "rating": 4.5, "image": "/assets/yummyfoods4.png", }, { "id": "10", "name": "Ceasar Salad", "price": 8.00, "description": "Fresh romaine lettuce with ceasar dressing and croutons.", "category": "Salads", "rating": 4.5, "image": "/assets/salad1.png", }, { "id": "11", "name": "Greek Salad", "price": 8.00, "description": "Chopped romaine lettuce with feta cheese, olives, and tomatoes.", "category": "Salads", "rating": 4.5, "image": "/assets/salad2.png", }, { "id": "12", "name": "Sweetness Paradise", "price": 5.00, "description": "Includes a small pudding packed with Amarula cream and liquor.", "category": "Desserts", "rating": 4.5, "image": "/assets/dessert3.png", } ]
+    changes['menu'] = default_menu
     try:
         if changes.get('address'):
             lat, lon = address_to_lat_lon(changes.get('address'))
@@ -704,7 +736,6 @@ def delete_establishment_route():
     est_id = request.form.get('eid')
     u_id = request.form.get('uid')
     try:
-        # TODO: Check if user is authorized to delete establishment
         est_id = delete_establishment(est_id)
         return jsonify({'message': 'Establishment deleted successfully', 'eid': est_id}), 200
     except ValueError as e:
@@ -906,7 +937,8 @@ def populate_db_route():
     try:
         uid = request.get_json().get('uid')
         names = ["Best Kitchen", "Gourmet Foods", "Bingo"]
-        menu_obj = [{"id":1,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/burger1.png"},{"id":2,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/burger2.png"},{"id":3,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/burger3.png"},{"id":4,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/burger4.png"},{"id":5,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/desserts1.png"},{"id":6,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/desserts2.png"},{"id":7,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/desserts3.png"},{"id":8,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/salad1.png"}]
+        menu_obj = [ { "id": "1", "name": "Special Halloween Burger", "price": 10.00, "description": "Includes a special 200g Beef patty with tangy BBQ sauce and smoky bacon.", "category": "Specials", "rating": 5, "image": "/assets/burger1.png", }, { "id": "2", "name": "Mega Ghost Tower Burger", "price": 8.00, "description": "Includes smoked beef brisket with a special ghost pepper sauce.", "category": "Specials", "rating": 4.5, "image": "/assets/burger2.png", }, { "id": "3", "name": "Jr. Burger", "price": 6.00, "description": "Includes a 100g beef patty topped with cheese and no sauce.", "category": "Burgers", "rating": 4.5, "image": "/assets/burger3.png", }, { "id": "4", "name": "Spooky Combo", "price": 13.00, "description": "Special Combo of Burger, Fries, drink, and a dessert.", "category": "Specials", "rating": 4.5, "image": "/assets/burger4.png", }, { "id": "5", "name": "Sushi Combo 1", "price": 15.00, "description": "Includes variety of sushi, sashimi, and special rolls.", "category": "Sushi Combos", "rating": 4.5, "image": "/assets/sushicombo1.png", }, { "id": "6", "name": "Sushi Combo 2", "price": 15.00, "description": "Fresh fish bowled with special sauce and served with rice.", "category": "Sushi Combos", "rating": 4.5, "image": "/assets/sushicombo2.png", }, { "id": "7", "name": "Sushi Combo 3", "price": 15.00, "description": "Includes variety of sushi, sashimi, and special rolls.", "category": "Sushi Combos", "rating": 4.5, "image": "/assets/sushicombo3.png", }, { "id": "8", "name": "Curry Chicken Combo", "price": 12.00, "description": "Combo of butter chicken with naan, rice, and curry. Mildly spicy.", "category": "Platters", "rating": 4.5, "image": "/assets/yummyfoods1.png", }, { "id": "9", "name": "Chicken Tikka Masala", "price": 12.00, "description": "Chicken tikka masala with naan, rice, and curry. Mildly spicy.", "category": "Platters", "rating": 4.5, "image": "/assets/yummyfoods4.png", }, { "id": "10", "name": "Ceasar Salad", "price": 8.00, "description": "Fresh romaine lettuce with ceasar dressing and croutons.", "category": "Salads", "rating": 4.5, "image": "/assets/salad1.png", }, { "id": "11", "name": "Greek Salad", "price": 8.00, "description": "Chopped romaine lettuce with feta cheese, olives, and tomatoes.", "category": "Salads", "rating": 4.5, "image": "/assets/salad2.png", }, { "id": "12", "name": "Sweetness Paradise", "price": 5.00, "description": "Includes a small pudding packed with Amarula cream and liquor.", "category": "Desserts", "rating": 4.5, "image": "/assets/dessert3.png", } ]
+        #menu_obj = [{"id":1,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/burger1.png"},{"id":2,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/burger2.png"},{"id":3,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/burger3.png"},{"id":4,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/burger4.png"},{"id":5,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/desserts1.png"},{"id":6,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/desserts2.png"},{"id":7,"name":"Burger","description":"Beef patty, lettuce, tomato, onion, pickles, ketchup, mustard, and mayo.","price":5.99,"category":"Main Course","rating":4,"inventoryStatus":"INSTOCK","img":"/assets/desserts3.png"},{"id":8,"name":"Pizza","description":"Cheese pizza with your choice of toppings.","price":9.99,"category":"Main Course","rating":3,"inventoryStatus":"LOWSTOCK","img":"/assets/salad1.png"}]
         promo_obj = ["5% OFF", "Free Beverage", "10% OFF", "Free Dessert", "Free Entree"]
         description = "Restaurant description"
         keywords = ["Demo", "Restaurant", "Food"]
@@ -923,5 +955,6 @@ def populate_db_route():
         return jsonify({'message': 'Establishments created successfully'}), 200
     except ValueError as e:
         return jsonify({'message': str(e)}), 400
+
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8080, debug=True)

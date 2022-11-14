@@ -118,6 +118,7 @@ export default {
             this.getEstabs();
             var mapOptions = {
                 zoom: 13,
+                mapId: 'e20fb2ffa0a58fda',
                 center: { lat: this.authStore.user.lat, lng: this.authStore.user.lon },
                 zoomControl: false,
                 mapTypeControl: false,
